@@ -6,7 +6,7 @@ import {
   Bell,
   FileText,
   Grid3x3,
-  HardDrive,
+  Handshake,
   LogOut,
   Trophy,
   UserCheck,
@@ -67,10 +67,10 @@ const menuItems = [
     iconClassName: "text-yellow-400",
   },
   {
-    icon: HardDrive,
-    label: "Dashboard",
-    href: "/dashboard",
-    iconClassName: "text-red-400",
+    icon: Handshake,
+    label: "Partidas",
+    href: "/partidas",
+    iconClassName: "text-green-600",
   },
 ];
 
