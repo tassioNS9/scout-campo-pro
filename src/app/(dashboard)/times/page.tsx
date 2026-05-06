@@ -1,19 +1,8 @@
 "use client";
 
-import { ArrowLeft, Edit2, Plus, Trash2 } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
-import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -23,7 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { api } from "@/lib/api-client";
+import { Plus, Trash2, Edit2, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
 
 export default function TimesPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -72,27 +71,27 @@ export default function TimesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
       <div className="container mx-auto">
-        <div className="mb-8 flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-8">
           <Link href="/">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Button>
           </Link>
         </div>
-        <div className="mb-8 flex items-center justify-between">
+        <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
               Gerenciamento de Times
             </h1>
-            <p className="mt-2 text-slate-600">
+            <p className="text-slate-600 mt-2">
               Cadastre e organize seus times
             </p>
           </div>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="w-4 h-4 mr-2" />
                 Novo Time
               </Button>
             </DialogTrigger>
@@ -161,15 +160,15 @@ export default function TimesPage() {
         </div>
 
         {isLoading ? (
-          <div className="py-12 text-center text-slate-600">
+          <div className="text-center py-12 text-slate-600">
             Carregando times...
           </div>
         ) : times && times.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {times.map((time) => (
               <Card
                 key={time.id}
-                className="bg-gray-300 transition hover:shadow-lg"
+                className="hover:shadow-lg transition bg-gray-300"
               >
                 <CardHeader>
                   <CardTitle className="text-lg">{time.nome}</CardTitle>
@@ -186,7 +185,7 @@ export default function TimesPage() {
                   )}
                   <div className="flex gap-2 pt-4">
                     <Button variant="outline" size="sm" className="flex-1">
-                      <Edit2 className="mr-1 h-4 w-4" />
+                      <Edit2 className="w-4 h-4 mr-1" />
                       Editar
                     </Button>
                     <Button
@@ -195,7 +194,7 @@ export default function TimesPage() {
                       onClick={() => handleDelete(time.id)}
                       disabled={deleteMutation.isPending}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -203,14 +202,14 @@ export default function TimesPage() {
             ))}
           </div>
         ) : (
-          <Card className="py-12 text-center">
+          <Card className="text-center py-12">
             <CardContent>
-              <p className="mb-4 text-slate-600">Nenhum time cadastrado</p>
+              <p className="text-slate-600 mb-4">Nenhum time cadastrado</p>
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700"
                 onClick={() => setIsOpen(true)}
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="w-4 h-4 mr-2" />
                 Adicionar Primeiro Time
               </Button>
             </CardContent>

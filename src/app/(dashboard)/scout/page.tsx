@@ -1,10 +1,6 @@
 "use client";
 
-import { Minus, Pause, Play, Plus, RotateCcw } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { toast } from "sonner";
-
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -15,6 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { api } from "@/lib/api-client";
+import { Play, Pause, RotateCcw, Plus, Minus } from "lucide-react";
+import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 
 const EVENTOS = [
   "Finalização Certa",
@@ -179,16 +178,16 @@ function ScoutContent() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Selection Row */}
-        <div className="mb-8 grid gap-6 md:grid-cols-2">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="block text-sm font-semibold text-slate-300 mb-2">
               Partida
             </label>
             <Select value={idPartida} onValueChange={setIdPartida}>
-              <SelectTrigger className="border-slate-700 bg-slate-800 text-white">
+              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                 <SelectValue placeholder="Selecione uma partida" />
               </SelectTrigger>
-              <SelectContent className="border-slate-700 bg-slate-800">
+              <SelectContent className="bg-slate-800 border-slate-700">
                 {partidas?.map((p) => (
                   <SelectItem key={p.id} value={p.id.toString()}>
                     Partida #{p.id}
@@ -199,14 +198,14 @@ function ScoutContent() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="block text-sm font-semibold text-slate-300 mb-2">
               Jogador
             </label>
             <Select value={idJogador} onValueChange={setIdJogador}>
-              <SelectTrigger className="border-slate-700 bg-slate-800 text-white">
+              <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                 <SelectValue placeholder="Selecione um jogador" />
               </SelectTrigger>
-              <SelectContent className="border-slate-700 bg-slate-800">
+              <SelectContent className="bg-slate-800 border-slate-700">
                 {jogadores?.map((j) => (
                   <SelectItem key={j.id} value={j.id.toString()}>
                     #{j.numero} - {j.nome}
@@ -218,40 +217,40 @@ function ScoutContent() {
         </div>
 
         {/* Scoreboard */}
-        <div className="mb-8 rounded-lg border border-slate-600 bg-gradient-to-r from-slate-800 to-slate-700 p-8">
-          <div className="grid grid-cols-3 items-center gap-8">
+        <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-lg border border-slate-600 p-8 mb-8">
+          <div className="grid grid-cols-3 gap-8 items-center">
             {/* Time A */}
             <div className="text-center">
-              <div className="mb-2 text-sm text-slate-400">Time A</div>
-              <div className="flex items-center justify-center gap-2">
+              <div className="text-sm text-slate-400 mb-2">Time A</div>
+              <div className="flex items-center gap-2 justify-center">
                 <Button
                   size="sm"
                   onClick={() => setPlacarA(Math.max(0, placarA - 1))}
-                  className="bg-red-600 text-white hover:bg-red-700"
+                  className="bg-red-600 hover:bg-red-700 text-white"
                   disabled={isPartidaFinalizada}
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className="w-4 h-4" />
                 </Button>
-                <span className="min-w-[100px] text-center text-6xl font-bold text-blue-400">
+                <span className="text-6xl font-bold text-blue-400 min-w-[100px] text-center">
                   {placarA}
                 </span>
                 <Button
                   size="sm"
                   onClick={() => handleGol("A")}
-                  className="bg-green-600 text-white hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 text-white"
                   disabled={isPartidaFinalizada}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
             {/* Timer and Period */}
             <div className="text-center">
-              <div className="mb-4 font-mono text-6xl font-bold text-green-500">
+              <div className="text-6xl font-bold text-green-500 font-mono mb-4">
                 {formatTime(tempo)}
               </div>
-              <div className="mb-4 flex justify-center gap-2">
+              <div className="flex justify-center gap-2 mb-4">
                 <Button
                   size="sm"
                   variant={tempoAtual === "1T" ? "default" : "outline"}
@@ -287,44 +286,44 @@ function ScoutContent() {
                   disabled={isPartidaFinalizada}
                 >
                   {isRunning ? (
-                    <Pause className="h-4 w-4" />
+                    <Pause className="w-4 h-4" />
                   ) : (
-                    <Play className="h-4 w-4" />
+                    <Play className="w-4 h-4" />
                   )}
                 </Button>
                 <Button
                   size="sm"
                   onClick={() => setTempo(0)}
-                  className="bg-slate-600 text-white hover:bg-slate-700"
+                  className="bg-slate-600 hover:bg-slate-700 text-white"
                   disabled={isPartidaFinalizada}
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="w-4 h-4" />
                 </Button>
               </div>
             </div>
 
             {/* Time B */}
             <div className="text-center">
-              <div className="mb-2 text-sm text-slate-400">Time B</div>
-              <div className="flex items-center justify-center gap-2">
+              <div className="text-sm text-slate-400 mb-2">Time B</div>
+              <div className="flex items-center gap-2 justify-center">
                 <Button
                   size="sm"
                   onClick={() => setPlacarB(Math.max(0, placarB - 1))}
-                  className="bg-red-600 text-white hover:bg-red-700"
+                  className="bg-red-600 hover:bg-red-700 text-white"
                   disabled={isPartidaFinalizada}
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className="w-4 h-4" />
                 </Button>
-                <span className="min-w-[100px] text-center text-6xl font-bold text-yellow-400">
+                <span className="text-6xl font-bold text-yellow-400 min-w-[100px] text-center">
                   {placarB}
                 </span>
                 <Button
                   size="sm"
                   onClick={() => handleGol("B")}
-                  className="bg-green-600 text-white hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 text-white"
                   disabled={isPartidaFinalizada}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -332,8 +331,8 @@ function ScoutContent() {
         </div>
 
         {/* Zona de Campo */}
-        <Card className="mb-8 border-slate-700 bg-slate-800 p-6">
-          <h3 className="mb-4 text-lg font-bold text-white">Zona de Campo</h3>
+        <Card className="bg-slate-800 border-slate-700 p-6 mb-8">
+          <h3 className="text-lg font-bold text-white mb-4">Zona de Campo</h3>
           <div className="flex gap-4">
             <Button
               onClick={() => setZona("Defesa")}
@@ -360,16 +359,16 @@ function ScoutContent() {
         </Card>
 
         {/* Eventos */}
-        <Card className="border-slate-700 bg-slate-800 p-6">
-          <h3 className="mb-6 text-lg font-bold text-white">
+        <Card className="bg-slate-800 border-slate-700 p-6">
+          <h3 className="text-lg font-bold text-white mb-6">
             Registrar Eventos
           </h3>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {EVENTOS.map((evento) => (
               <Button
                 key={evento}
                 onClick={() => handleEvento(evento)}
-                className="flex h-auto flex-col items-center gap-1 bg-slate-700 py-3 text-xs text-white hover:bg-slate-600"
+                className="bg-slate-700 hover:bg-slate-600 text-white text-xs h-auto py-3 flex flex-col items-center gap-1"
                 disabled={isPartidaFinalizada}
               >
                 {evento}
@@ -379,15 +378,15 @@ function ScoutContent() {
         </Card>
 
         {/* Bottom Action Buttons */}
-        <div className="mt-8 flex gap-4 pb-8">
+        <div className="flex gap-4 mt-8 pb-8">
           <Button
-            className="flex-1 bg-slate-700 py-6 text-white hover:bg-slate-600"
+            className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-6"
             disabled={isPartidaFinalizada}
           >
             Pausar Partida
           </Button>
           <Button
-            className="flex-1 bg-green-600 py-6 text-white hover:bg-green-700"
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-6"
             onClick={handleFinalizarPartida}
             disabled={isPartidaFinalizada || updatePartidaMutation.isPending}
           >
@@ -403,7 +402,7 @@ export default function ScoutPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           Carregando...
         </div>
       }

@@ -1,14 +1,7 @@
 "use client";
 
-import { ArrowLeft, FileText, Save } from "lucide-react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
-import { toast } from "sonner";
-
-import { Button } from "@/components/ui/button";
+import { useState, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -16,8 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api-client";
+import { FileText, Save, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 function normalizePdfText(value: string) {
   return value
@@ -223,16 +222,16 @@ function RelatoriosContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
       <div className="container mx-auto">
-        <div className="mb-6 flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-6">
           <Link href="/">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Voltar
             </Button>
           </Link>
         </div>
         <div className="mb-8">
-          <h1 className="mb-4 text-3xl font-bold text-slate-900">
+          <h1 className="text-3xl font-bold text-slate-900 mb-4">
             Relatórios de Partida
           </h1>
           <div className="max-w-xs">
@@ -252,7 +251,7 @@ function RelatoriosContent() {
         </div>
 
         {!idPartida ? (
-          <Card className="py-12 text-center">
+          <Card className="text-center py-12">
             <CardContent>
               <p className="text-slate-600">
                 Selecione uma partida para visualizar o relatório
@@ -260,43 +259,43 @@ function RelatoriosContent() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid lg:grid-cols-2 gap-6">
             {/* Resumo de Eventos */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
+                  <FileText className="w-5 h-5" />
                   Resumo da Partida
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-center">
+                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200 text-center">
                     <p className="text-sm text-slate-600">Gols</p>
                     <p className="text-3xl font-bold text-emerald-600">
                       {totalGols}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-center">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 text-center">
                     <p className="text-sm text-slate-600">Finalizações</p>
                     <p className="text-3xl font-bold text-blue-600">
                       {totalFinalizacoes}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-center">
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 text-center">
                     <p className="text-sm text-slate-600">Desarmes</p>
                     <p className="text-3xl font-bold text-purple-600">
                       {totalDesarmes}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center">
+                  <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-center">
                     <p className="text-sm text-slate-600">Dribles</p>
                     <p className="text-3xl font-bold text-yellow-600">
                       {totalDribles}
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-center">
+                <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
                   <p className="text-sm text-slate-600">Total de Eventos</p>
                   <p className="text-3xl font-bold text-slate-900">
                     {totalEventos}
@@ -315,7 +314,7 @@ function RelatoriosContent() {
                   {estatisticas?.slice(0, 5).map((stat, index) => (
                     <div
                       key={stat.id}
-                      className="flex items-center justify-between rounded-lg bg-slate-50 p-3"
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-slate-500">
@@ -339,7 +338,7 @@ function RelatoriosContent() {
                     </div>
                   ))}
                   {(!estatisticas || estatisticas.length === 0) && (
-                    <p className="py-4 text-center text-slate-500">
+                    <p className="text-slate-500 text-center py-4">
                       Nenhuma estatística registrada
                     </p>
                   )}
@@ -379,7 +378,7 @@ function RelatoriosContent() {
                   onClick={handleSaveRelatorio}
                   className="bg-emerald-600 hover:bg-emerald-700"
                 >
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="w-4 h-4 mr-2" />
                   Gerar PDF do Relatório
                 </Button>
               </CardContent>
@@ -391,14 +390,14 @@ function RelatoriosContent() {
                 <CardTitle>Histórico de Eventos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="max-h-80 space-y-2 overflow-y-auto">
+                <div className="space-y-2 max-h-80 overflow-y-auto">
                   {eventos?.map((evento) => (
                     <div
                       key={evento.id}
-                      className="flex items-center justify-between rounded-lg bg-slate-50 p-3"
+                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="rounded bg-slate-200 px-2 py-1 font-mono text-xs">
+                        <span className="text-xs font-mono bg-slate-200 px-2 py-1 rounded">
                           {evento.tempo} {evento.minuto}&apos;
                         </span>
                         <span className="font-medium text-slate-900">
@@ -407,7 +406,7 @@ function RelatoriosContent() {
                       </div>
                       <div className="flex items-center gap-2">
                         {evento.zona && (
-                          <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700">
+                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
                             {evento.zona}
                           </span>
                         )}
@@ -418,7 +417,7 @@ function RelatoriosContent() {
                     </div>
                   ))}
                   {(!eventos || eventos.length === 0) && (
-                    <p className="py-4 text-center text-slate-500">
+                    <p className="text-slate-500 text-center py-4">
                       Nenhum evento registrado para esta partida
                     </p>
                   )}
@@ -436,7 +435,7 @@ export default function RelatoriosPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           Carregando...
         </div>
       }

@@ -1,9 +1,17 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-
 import { ChartPieDonut } from "@/components/chart-pie-donut";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api } from "@/lib/api-client";
+
+import { useState } from "react";
 
 const defaultDashboardData = {
   resumo: {
@@ -37,11 +45,14 @@ const legendConfig = [
 export default function DashboardPage() {
   const searchParams = useSearchParams();
   const partidaParam = searchParams.get("partida");
-  const idPartida = Number(partidaParam);
-  const hasValidPartidaId = Number.isInteger(idPartida) && idPartida > 0;
+  const [idPartida, setIdPartida] = useState<string>(partidaParam ?? "");
+  const { data: partidas } = api.partidas.list.useQuery();
+  const numericIdPartida = Number(idPartida);
+  const hasValidPartidaId =
+    Number.isInteger(numericIdPartida) && numericIdPartida > 0;
 
   const { data, isLoading } = api.dashboard.getByPartida.useQuery(
-    { idPartida },
+    { idPartida: numericIdPartida },
     { enabled: hasValidPartidaId },
   );
 
@@ -51,19 +62,23 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-black pb-20 text-white">
       <div className="mx-auto max-w-7xl space-y-6 p-6">
         <div className="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
-          {!hasValidPartidaId ? (
-            <p className="text-sm text-slate-300">
-              Selecione uma partida para visualizar o dashboard.
-            </p>
-          ) : isLoading ? (
-            <p className="text-sm text-slate-300">
-              Carregando dados da partida...
-            </p>
-          ) : (
-            <p className="text-sm text-slate-300">
-              Dashboard da partida #{idPartida}
-            </p>
-          )}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-300">
+              Partida
+            </label>
+            <Select value={idPartida} onValueChange={setIdPartida}>
+              <SelectTrigger className="border-slate-700 bg-slate-800 text-white">
+                <SelectValue placeholder="Selecione uma partida" />
+              </SelectTrigger>
+              <SelectContent className="border-slate-700 bg-slate-800">
+                {partidas?.map((p) => (
+                  <SelectItem key={p.id} value={p.id.toString()}>
+                    Partida #{p.id}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Stats Cards */}
