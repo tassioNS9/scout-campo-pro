@@ -86,6 +86,13 @@ export const statusPartidaEnum = pgEnum("status_partida", [
   "finalizada",
 ]);
 
+export const resultadoEnum = pgEnum("resultado", [
+  "Vitória",
+  "Derrota",
+  "Empate",
+  "Sem Resultado",
+]);
+
 export const tipoEventoEnum = pgEnum("tipo_evento", [
   "Finalização Certa",
   "Finalização Errada",
@@ -111,9 +118,9 @@ export const tempoEnum = pgEnum("tempo_partida", ["1T", "2T"]);
 // Times table
 export const times = pgTable("times", {
   id: serial("id").primaryKey(),
-  nome: varchar("nome", { length: 255 }).notNull(),
+  nome: varchar("nome", { length: 100 }).notNull().unique(),
   categoria: categoriaEnum("categoria").notNull(),
-  cidade: varchar("cidade", { length: 255 }),
+  cidade: varchar("cidade", { length: 100 }),
   estado: varchar("estado", { length: 2 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -124,7 +131,7 @@ export type InsertTime = typeof times.$inferInsert;
 // Jogadores table
 export const jogadores = pgTable("jogadores", {
   id: serial("id").primaryKey(),
-  nome: varchar("nome", { length: 255 }).notNull(),
+  nome: varchar("nome", { length: 100 }).notNull(),
   numero: integer("numero").notNull(),
   posicao: posicaoEnum("posicao").notNull(),
   idade: integer("idade"),
@@ -138,15 +145,16 @@ export type InsertJogador = typeof jogadores.$inferInsert;
 // Partidas table
 export const partidas = pgTable("partidas", {
   id: serial("id").primaryKey(),
-  timeA: integer("timeA").notNull(),
-  timeB: integer("timeB").notNull(),
+  time: varchar("timeA", { length: 100 }).notNull(),
+  timeAdversario: varchar("timeB", { length: 100 }).notNull(),
   data: timestamp("data").notNull(),
-  campeonato: varchar("campeonato", { length: 255 }),
+  campeonato: varchar("campeonato", { length: 100 }),
   categoria: categoriaEnum("categoria").notNull(),
   formacao: varchar("formacao", { length: 50 }),
   placarTimeA: integer("placarTimeA").default(0),
   placarTimeB: integer("placarTimeB").default(0),
   status: statusPartidaEnum("status").default("planejada"),
+  resultado: resultadoEnum("resultado").default("Sem Resultado"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
@@ -176,8 +184,7 @@ export const estatisticas = pgTable("estatisticas", {
   finalizacaoCerta: integer("finalizacaoCerta").default(0),
   finalizacaoErrada: integer("finalizacaoErrada").default(0),
   assistencias: integer("assistencias").default(0),
-  passesDecisvos: integer("passesDecisvos").default(0),
-  dribloCerto: integer("dribloCerto").default(0),
+  dribleCerto: integer("dribleCerto").default(0),
   dribleErrado: integer("dribleErrado").default(0),
   cruzamentos: integer("cruzamentos").default(0),
   desarmes: integer("desarmes").default(0),
@@ -185,65 +192,14 @@ export const estatisticas = pgTable("estatisticas", {
   ganhoBola: integer("ganhoBola").default(0),
   perdaBola: integer("perdaBola").default(0),
   faltas: integer("faltas").default(0),
-  duelosGanhos: integer("duelosGanhos").default(0),
-  duelosPerdidos: integer("duelosPerdidos").default(0),
   gols: integer("gols").default(0),
   nota: decimal("nota", { precision: 3, scale: 1 }).default("0"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
+
 export type Estatistica = typeof estatisticas.$inferSelect;
 export type InsertEstatistica = typeof estatisticas.$inferInsert;
-
-// Heatmaps table
-export const heatmaps = pgTable("heatmaps", {
-  id: serial("id").primaryKey(),
-  idJogador: integer("idJogador").notNull(),
-  idPartida: integer("idPartida").notNull(),
-  defesa: integer("defesa").default(0),
-  meio: integer("meio").default(0),
-  ataque: integer("ataque").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
-export type Heatmap = typeof heatmaps.$inferSelect;
-export type InsertHeatmap = typeof heatmaps.$inferInsert;
-
-// Posse de Bola table
-export const posseBola = pgTable("posseBola", {
-  id: serial("id").primaryKey(),
-  idPartida: integer("idPartida").notNull(),
-  timeA: integer("timeA").default(0),
-  timeB: integer("timeB").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
-export type PosseBola = typeof posseBola.$inferSelect;
-export type InsertPosseBola = typeof posseBola.$inferInsert;
-
-// Pressao table
-export const pressao = pgTable("pressao", {
-  id: serial("id").primaryKey(),
-  idPartida: integer("idPartida").notNull(),
-  timeA: integer("timeA").default(0),
-  timeB: integer("timeB").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
-export type Pressao = typeof pressao.$inferSelect;
-export type InsertPressao = typeof pressao.$inferInsert;
-
-// Recuperacoes table
-export const recuperacoes = pgTable("recuperacoes", {
-  id: serial("id").primaryKey(),
-  idPartida: integer("idPartida").notNull(),
-  timeA: integer("timeA").default(0),
-  timeB: integer("timeB").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
-export type Recuperacao = typeof recuperacoes.$inferSelect;
-export type InsertRecuperacao = typeof recuperacoes.$inferInsert;
 
 // Relatorios table
 export const relatorios = pgTable("relatorios", {
