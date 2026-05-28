@@ -18,7 +18,6 @@ const tipoEventoSchema = z.enum([
   "Finalização Certa",
   "Finalização Errada",
   "Assistência",
-  "Passe Decisivo",
   "Drible Certo",
   "Drible Errado",
   "Cruzamento",
@@ -27,8 +26,6 @@ const tipoEventoSchema = z.enum([
   "Ganho de Bola",
   "Perda de Bola",
   "Falta",
-  "Duelo Ganho",
-  "Duelo Perdido",
   "Gol",
 ]);
 const tempoSchema = z.enum(["1T", "2T"]);
@@ -129,31 +126,6 @@ async function runQuery(
         payload.idPartida,
       );
     }
-    case "heatmaps/getByJogadorPartida": {
-      const payload = z
-        .object({ idJogador: z.number(), idPartida: z.number() })
-        .parse(input);
-      return await db.getHeatmapByJogadorPartida(
-        payload.idJogador,
-        payload.idPartida,
-      );
-    }
-    case "posseBola/getByPartida": {
-      const payload = z.object({ idPartida: z.number() }).parse(input);
-      return await db.getPosseBolaByPartida(payload.idPartida);
-    }
-    case "pressao/getByPartida": {
-      const payload = z.object({ idPartida: z.number() }).parse(input);
-      return await db.getPressaoByPartida(payload.idPartida);
-    }
-    case "recuperacoes/getByPartida": {
-      const payload = z.object({ idPartida: z.number() }).parse(input);
-      return await db.getRecuperacaoByPartida(payload.idPartida);
-    }
-    case "relatorios/getByPartida": {
-      const payload = z.object({ idPartida: z.number() }).parse(input);
-      return await db.getRelatorioByPartida(payload.idPartida);
-    }
     default:
       return null;
   }
@@ -234,8 +206,8 @@ async function runMutation(
       if (!user) return unauthorized();
       const payload = z
         .object({
-          timeA: z.number(),
-          timeB: z.number(),
+          time: z.string(),
+          timeAdversario: z.string(),
           data: z.coerce.date(),
           campeonato: z.string().optional(),
           categoria: categoriaSchema,
@@ -305,77 +277,6 @@ async function runMutation(
         .parse(input);
       const { id, ...data } = payload;
       return await db.updateEstatistica(id, data);
-    }
-    case "heatmaps/create": {
-      if (!user) return unauthorized();
-      const payload = z
-        .object({ idJogador: z.number(), idPartida: z.number() })
-        .parse(input);
-      return await db.createHeatmap(payload);
-    }
-    case "heatmaps/update": {
-      if (!user) return unauthorized();
-      const payload = z
-        .object({
-          id: z.number(),
-          defesa: z.number().int().optional(),
-          meio: z.number().int().optional(),
-          ataque: z.number().int().optional(),
-        })
-        .parse(input);
-      const { id, ...data } = payload;
-      return await db.updateHeatmap(id, data);
-    }
-    case "posseBola/create": {
-      if (!user) return unauthorized();
-      const payload = z.object({ idPartida: z.number() }).parse(input);
-      return await db.createPosseBola(payload);
-    }
-    case "posseBola/update": {
-      if (!user) return unauthorized();
-      const payload = z
-        .object({
-          id: z.number(),
-          timeA: z.number().int().optional(),
-          timeB: z.number().int().optional(),
-        })
-        .parse(input);
-      const { id, ...data } = payload;
-      return await db.updatePosseBola(id, data);
-    }
-    case "pressao/create": {
-      if (!user) return unauthorized();
-      const payload = z.object({ idPartida: z.number() }).parse(input);
-      return await db.createPressao(payload);
-    }
-    case "pressao/update": {
-      if (!user) return unauthorized();
-      const payload = z
-        .object({
-          id: z.number(),
-          timeA: z.number().int().optional(),
-          timeB: z.number().int().optional(),
-        })
-        .parse(input);
-      const { id, ...data } = payload;
-      return await db.updatePressao(id, data);
-    }
-    case "recuperacoes/create": {
-      if (!user) return unauthorized();
-      const payload = z.object({ idPartida: z.number() }).parse(input);
-      return await db.createRecuperacao(payload);
-    }
-    case "recuperacoes/update": {
-      if (!user) return unauthorized();
-      const payload = z
-        .object({
-          id: z.number(),
-          timeA: z.number().int().optional(),
-          timeB: z.number().int().optional(),
-        })
-        .parse(input);
-      const { id, ...data } = payload;
-      return await db.updateRecuperacao(id, data);
     }
     case "relatorios/create": {
       if (!user) return unauthorized();
