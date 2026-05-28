@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,10 +19,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { api } from "@/lib/api-client";
 import { Plus, ArrowLeft, Calendar, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { createPartida } from "@/app/actions/create-partida";
+import { listPartidas } from "@/app/actions/list-partidas";
+import { listTimes } from "@/app/actions/list-times";
+import type { Partida, Time } from "@/db/schema";
 
 const FORMACOES = [
   "4-4-2",
@@ -36,8 +39,8 @@ const FORMACOES = [
 
 export default function PartidasPage() {
   const [isOpen, setIsOpen] = useState(false);
-  const [timeA, setTimeA] = useState("");
-  const [timeB, setTimeB] = useState("");
+  const [time, setTime] = useState("");
+  const [timeAdversario, setTimeAdversario] = useState("");
   const [data, setData] = useState("");
   const [campeonato, setCampeonato] = useState("");
   const [categoria, setCategoria] = useState<
@@ -45,34 +48,53 @@ export default function PartidasPage() {
   >("Sub-13");
   const [formacao, setFormacao] = useState("4-4-2");
 
-  const { data: partidas, isLoading, refetch } = api.partidas.list.useQuery();
-  const { data: times } = api.times.list.useQuery();
-  const createMutation = api.partidas.create.useMutation();
+  const [partidas, setPartidas] = useState<Partida[]>([]);
+  const [times, setTimes] = useState<Time[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    const [partidasData, timesData] = await Promise.all([
+      listPartidas(),
+      listTimes(),
+    ]);
+    setPartidas(partidasData);
+    setTimes(timesData);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    void loadData();
+  }, []);
 
   const handleCreate = async () => {
-    if (!timeA || !timeB || !data) {
+    if (!time || !timeAdversario || !data) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
     try {
-      await createMutation.mutateAsync({
-        timeA: parseInt(timeA),
-        timeB: parseInt(timeB),
+      setIsCreating(true);
+      await createPartida({
+        time,
+        timeAdversario,
         data: new Date(data),
         campeonato,
         categoria,
         formacao,
       });
       toast.success("Partida criada com sucesso");
-      setTimeA("");
-      setTimeB("");
+      setTime("");
+      setTimeAdversario("");
       setData("");
       setCampeonato("");
       setFormacao("4-4-2");
       setIsOpen(false);
-      refetch();
+      await loadData();
     } catch {
       toast.error("Falha ao criar partida");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -100,52 +122,56 @@ export default function PartidasPage() {
     const s = status ?? "planejada";
     return (
       <span
-        className={`text-xs font-medium px-2 py-1 rounded-full ${styles[s] ?? styles.planejada}`}
+        className={`rounded-full px-2 py-1 text-xs font-medium ${styles[s] ?? styles.planejada}`}
       >
         {labels[s] ?? "Planejada"}
       </span>
     );
   };
 
-  const getTimeName = (id: number) => {
-    return times?.find((t) => t.id === id)?.nome ?? `Time #${id}`;
+  const getTimeName = (id: number | string) => {
+    const numericId = Number(id);
+    if (!Number.isNaN(numericId)) {
+      return times.find((t) => t.id === numericId)?.nome ?? `Time #${id}`;
+    }
+    return typeof id === "string" ? id : `Time #${id}`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-8">
       <div className="container mx-auto">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="mb-8 flex items-center gap-4">
           <Link href="/">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Button>
           </Link>
         </div>
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
               Gerenciamento de Partidas
             </h1>
-            <p className="text-slate-600 mt-2">
+            <p className="mt-2 text-slate-600">
               Crie e acompanhe suas partidas
             </p>
           </div>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Nova Partida
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="w-[90%]">
               <DialogHeader>
                 <DialogTitle>Criar Nova Partida</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="timeA">Time A</Label>
-                  <Select value={timeA} onValueChange={setTimeA}>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="time">Time</Label>
+                  <Select value={time} onValueChange={setTime}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um time" />
                     </SelectTrigger>
@@ -158,22 +184,16 @@ export default function PartidasPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="timeB">Time B</Label>
-                  <Select value={timeB} onValueChange={setTimeB}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {times?.map((time) => (
-                        <SelectItem key={time.id} value={time.id.toString()}>
-                          {time.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="timeAdversario">Time Adversário</Label>
+                  <Input
+                    className="w-40"
+                    placeholder="Selecione um time"
+                    value={timeAdversario}
+                    onChange={(e) => setTimeAdversario(e.target.value)}
+                  />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="data">Data e Hora</Label>
                   <Input
                     id="data"
@@ -182,7 +202,7 @@ export default function PartidasPage() {
                     onChange={(e) => setData(e.target.value)}
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="campeonato">Campeonato</Label>
                   <Input
                     id="campeonato"
@@ -191,7 +211,7 @@ export default function PartidasPage() {
                     placeholder="Ex: Campeonato Estadual"
                   />
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="categoria">Categoria</Label>
                   <Select
                     value={categoria}
@@ -210,7 +230,7 @@ export default function PartidasPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="flex flex-col gap-2">
                   <Label htmlFor="formacao">Formação Tática</Label>
                   <Select value={formacao} onValueChange={setFormacao}>
                     <SelectTrigger>
@@ -228,9 +248,9 @@ export default function PartidasPage() {
                 <Button
                   onClick={handleCreate}
                   className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  disabled={createMutation.isPending}
+                  disabled={isCreating}
                 >
-                  {createMutation.isPending ? "Criando..." : "Criar Partida"}
+                  {isCreating ? "Criando..." : "Criar Partida"}
                 </Button>
               </div>
             </DialogContent>
@@ -238,13 +258,13 @@ export default function PartidasPage() {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-12 text-slate-600">
+          <div className="py-12 text-center text-slate-600">
             Carregando partidas...
           </div>
         ) : partidas && partidas.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {partidas.map((partida) => (
-              <Card key={partida.id} className="hover:shadow-lg transition">
+              <Card key={partida.id} className="transition hover:shadow-lg">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">
@@ -254,19 +274,19 @@ export default function PartidasPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
-                    <div className="text-center flex-1">
-                      <p className="font-semibold text-slate-900 text-sm">
-                        {getTimeName(partida.timeA)}
+                  <div className="flex items-center justify-between rounded-lg bg-slate-50 p-3">
+                    <div className="flex-1 text-center">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {getTimeName(partida.time)}
                       </p>
                       <p className="text-2xl font-bold text-emerald-600">
                         {partida.placarTimeA ?? 0}
                       </p>
                     </div>
-                    <div className="text-slate-400 font-bold px-2">×</div>
-                    <div className="text-center flex-1">
-                      <p className="font-semibold text-slate-900 text-sm">
-                        {getTimeName(partida.timeB)}
+                    <div className="px-2 font-bold text-slate-400">×</div>
+                    <div className="flex-1 text-center">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {getTimeName(partida.timeAdversario)}
                       </p>
                       <p className="text-2xl font-bold text-blue-600">
                         {partida.placarTimeB ?? 0}
@@ -275,12 +295,12 @@ export default function PartidasPage() {
                   </div>
                   <div className="space-y-1 text-sm text-slate-600">
                     <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="h-4 w-4" />
                       <span>{formatDate(partida.data)}</span>
                     </div>
                     {partida.campeonato && (
                       <div className="flex items-center gap-2">
-                        <Trophy className="w-4 h-4" />
+                        <Trophy className="h-4 w-4" />
                         <span>{partida.campeonato}</span>
                       </div>
                     )}
@@ -305,14 +325,14 @@ export default function PartidasPage() {
             ))}
           </div>
         ) : (
-          <Card className="text-center py-12">
+          <Card className="py-12 text-center">
             <CardContent>
-              <p className="text-slate-600 mb-4">Nenhuma partida cadastrada</p>
+              <p className="mb-4 text-slate-600">Nenhuma partida cadastrada</p>
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700"
                 onClick={() => setIsOpen(true)}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Criar Primeira Partida
               </Button>
             </CardContent>

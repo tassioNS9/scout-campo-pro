@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -12,11 +12,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { api } from "@/lib/api-client";
 import { FileText, Save, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { listEstatisticasByPartida } from "@/app/actions/list-estatisticas-by-partida";
+import { listEventosByPartida } from "@/app/actions/list-eventos-by-partida";
+import { listPartidas } from "@/app/actions/list-partidas";
+import { listTimes } from "@/app/actions/list-times";
+import type { Estatistica, Evento, Partida, Time } from "@/db/schema";
 
 function normalizePdfText(value: string) {
   return value
@@ -111,27 +115,66 @@ function RelatoriosContent() {
   const [idPartida, setIdPartida] = useState<string>(partidaParam ?? "");
   const [analise, setAnalise] = useState("");
   const [sugestoes, setSugestoes] = useState("");
+  const [partidas, setPartidas] = useState<Partida[]>([]);
+  const [times, setTimes] = useState<Time[]>([]);
+  const [estatisticas, setEstatisticas] = useState<Estatistica[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [isLoadingDetalhes, setIsLoadingDetalhes] = useState(false);
 
-  const { data: partidas } = api.partidas.list.useQuery();
-  const { data: times } = api.times.list.useQuery();
-  const { data: estatisticas } = api.estatisticas.listByPartida.useQuery(
-    { idPartida: parseInt(idPartida) || 0 },
-    { enabled: !!idPartida },
-  );
-  const { data: eventos } = api.eventos.listByPartida.useQuery(
-    { idPartida: parseInt(idPartida) || 0 },
-    { enabled: !!idPartida },
-  );
+  useEffect(() => {
+    let isMounted = true;
+    Promise.all([listPartidas(), listTimes()]).then(
+      ([partidasData, timesData]) => {
+        if (isMounted) {
+          setPartidas(partidasData);
+          setTimes(timesData);
+        }
+      },
+    );
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  const getTimeName = (id: number) => {
-    return times?.find((t) => t.id === id)?.nome ?? `Time #${id}`;
+  useEffect(() => {
+    let isMounted = true;
+    const numericId = Number(idPartida);
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+      setEstatisticas([]);
+      setEventos([]);
+      return;
+    }
+    setIsLoadingDetalhes(true);
+    Promise.all([
+      listEstatisticasByPartida(numericId),
+      listEventosByPartida(numericId),
+    ])
+      .then(([estatisticasData, eventosData]) => {
+        if (isMounted) {
+          setEstatisticas(estatisticasData);
+          setEventos(eventosData);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingDetalhes(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [idPartida]);
+
+  const getTimeName = (id: number | string) => {
+    const numericId = Number(id);
+    if (!Number.isNaN(numericId)) {
+      return times.find((t) => t.id === numericId)?.nome ?? `Time #${id}`;
+    }
+    return typeof id === "string" ? id : `Time #${id}`;
   };
 
-  const getPartidaLabel = (p: { id: number; timeA: number; timeB: number }) => {
-    if (times) {
-      return `${getTimeName(p.timeA)} × ${getTimeName(p.timeB)}`;
-    }
-    return `Partida #${p.id}`;
+  const getPartidaLabel = (p: Partida) => {
+    return `${getTimeName(p.time)} × ${getTimeName(p.timeAdversario)}`;
   };
 
   const formatDate = (value: Date) => {
@@ -152,8 +195,8 @@ function RelatoriosContent() {
       return;
     }
 
-    const ranking = (estatisticas ?? []).slice(0, 5);
-    const linhasEventos = (eventos ?? []).map((evento) => {
+    const ranking = estatisticas.slice(0, 5);
+    const linhasEventos = eventos.map((evento) => {
       const zona = evento.zona ? ` - Zona: ${evento.zona}` : "";
       return `${evento.tempo} ${evento.minuto}' - ${evento.tipoEvento} (Jogador #${evento.idJogador})${zona}`;
     });
@@ -162,7 +205,7 @@ function RelatoriosContent() {
       "RELATORIO DE PARTIDA",
       "",
       `Partida #${partidaSelecionada.id}`,
-      `Confronto: ${getTimeName(partidaSelecionada.timeA)} x ${getTimeName(partidaSelecionada.timeB)}`,
+      `Confronto: ${getTimeName(partidaSelecionada.time)} x ${getTimeName(partidaSelecionada.timeAdversario)}`,
       `Data: ${formatDate(partidaSelecionada.data)}`,
       `Placar: ${partidaSelecionada.placarTimeA ?? 0} x ${partidaSelecionada.placarTimeB ?? 0}`,
       "",
@@ -206,32 +249,33 @@ function RelatoriosContent() {
   };
 
   // Calcular estatísticas agregadas
-  const totalGols = eventos?.filter((e) => e.tipoEvento === "Gol").length ?? 0;
-  const totalFinalizacoes =
-    eventos?.filter(
-      (e) =>
-        e.tipoEvento === "Finalização Certa" ||
-        e.tipoEvento === "Finalização Errada",
-    ).length ?? 0;
-  const totalDesarmes =
-    eventos?.filter((e) => e.tipoEvento === "Desarme").length ?? 0;
-  const totalDribles =
-    eventos?.filter((e) => e.tipoEvento === "Drible Certo").length ?? 0;
-  const totalEventos = eventos?.length ?? 0;
+  const totalGols = eventos.filter((e) => e.tipoEvento === "Gol").length;
+  const totalFinalizacoes = eventos.filter(
+    (e) =>
+      e.tipoEvento === "Finalização Certa" ||
+      e.tipoEvento === "Finalização Errada",
+  ).length;
+  const totalDesarmes = eventos.filter(
+    (e) => e.tipoEvento === "Desarme",
+  ).length;
+  const totalDribles = eventos.filter(
+    (e) => e.tipoEvento === "Drible Certo",
+  ).length;
+  const totalEventos = eventos.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
       <div className="container mx-auto">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="mb-6 flex items-center gap-4">
           <Link href="/">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Button>
           </Link>
         </div>
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-4">
+          <h1 className="mb-4 text-3xl font-bold text-slate-900">
             Relatórios de Partida
           </h1>
           <div className="max-w-xs">
@@ -240,7 +284,7 @@ function RelatoriosContent() {
                 <SelectValue placeholder="Selecione uma partida" />
               </SelectTrigger>
               <SelectContent>
-                {partidas?.map((p) => (
+                {partidas.map((p) => (
                   <SelectItem key={p.id} value={p.id.toString()}>
                     {getPartidaLabel(p)}
                   </SelectItem>
@@ -251,51 +295,57 @@ function RelatoriosContent() {
         </div>
 
         {!idPartida ? (
-          <Card className="text-center py-12">
+          <Card className="py-12 text-center">
             <CardContent>
               <p className="text-slate-600">
                 Selecione uma partida para visualizar o relatório
               </p>
             </CardContent>
           </Card>
+        ) : isLoadingDetalhes ? (
+          <Card className="py-12 text-center">
+            <CardContent>
+              <p className="text-slate-600">Carregando relatório...</p>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid gap-6 lg:grid-cols-2">
             {/* Resumo de Eventos */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
+                  <FileText className="h-5 w-5" />
                   Resumo da Partida
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200 text-center">
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-center">
                     <p className="text-sm text-slate-600">Gols</p>
                     <p className="text-3xl font-bold text-emerald-600">
                       {totalGols}
                     </p>
                   </div>
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 text-center">
+                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-center">
                     <p className="text-sm text-slate-600">Finalizações</p>
                     <p className="text-3xl font-bold text-blue-600">
                       {totalFinalizacoes}
                     </p>
                   </div>
-                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 text-center">
+                  <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-center">
                     <p className="text-sm text-slate-600">Desarmes</p>
                     <p className="text-3xl font-bold text-purple-600">
                       {totalDesarmes}
                     </p>
                   </div>
-                  <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-center">
+                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center">
                     <p className="text-sm text-slate-600">Dribles</p>
                     <p className="text-3xl font-bold text-yellow-600">
                       {totalDribles}
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-center">
                   <p className="text-sm text-slate-600">Total de Eventos</p>
                   <p className="text-3xl font-bold text-slate-900">
                     {totalEventos}
@@ -314,7 +364,7 @@ function RelatoriosContent() {
                   {estatisticas?.slice(0, 5).map((stat, index) => (
                     <div
                       key={stat.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                      className="flex items-center justify-between rounded-lg bg-slate-50 p-3"
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-slate-500">
@@ -338,7 +388,7 @@ function RelatoriosContent() {
                     </div>
                   ))}
                   {(!estatisticas || estatisticas.length === 0) && (
-                    <p className="text-slate-500 text-center py-4">
+                    <p className="py-4 text-center text-slate-500">
                       Nenhuma estatística registrada
                     </p>
                   )}
@@ -378,7 +428,7 @@ function RelatoriosContent() {
                   onClick={handleSaveRelatorio}
                   className="bg-emerald-600 hover:bg-emerald-700"
                 >
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="mr-2 h-4 w-4" />
                   Gerar PDF do Relatório
                 </Button>
               </CardContent>
@@ -390,14 +440,14 @@ function RelatoriosContent() {
                 <CardTitle>Histórico de Eventos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2 max-h-80 overflow-y-auto">
+                <div className="max-h-80 space-y-2 overflow-y-auto">
                   {eventos?.map((evento) => (
                     <div
                       key={evento.id}
-                      className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                      className="flex items-center justify-between rounded-lg bg-slate-50 p-3"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-mono bg-slate-200 px-2 py-1 rounded">
+                        <span className="rounded bg-slate-200 px-2 py-1 font-mono text-xs">
                           {evento.tempo} {evento.minuto}&apos;
                         </span>
                         <span className="font-medium text-slate-900">
@@ -406,7 +456,7 @@ function RelatoriosContent() {
                       </div>
                       <div className="flex items-center gap-2">
                         {evento.zona && (
-                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                          <span className="rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-700">
                             {evento.zona}
                           </span>
                         )}
@@ -417,7 +467,7 @@ function RelatoriosContent() {
                     </div>
                   ))}
                   {(!eventos || eventos.length === 0) && (
-                    <p className="text-slate-500 text-center py-4">
+                    <p className="py-4 text-center text-slate-500">
                       Nenhum evento registrado para esta partida
                     </p>
                   )}
@@ -435,7 +485,7 @@ export default function RelatoriosPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="flex min-h-screen items-center justify-center">
           Carregando...
         </div>
       }

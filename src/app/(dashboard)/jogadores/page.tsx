@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,10 +19,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { api } from "@/lib/api-client";
 import { Plus, Trash2, Edit2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { createJogador } from "@/app/actions/create-jogador";
+import { deleteJogador } from "@/app/actions/delete-jogador";
+import { listJogadoresByTime } from "@/app/actions/list-jogadores-by-time";
+import { listTimes } from "@/app/actions/list-times";
+import type { Jogador, Time } from "@/db/schema";
 
 const POSICOES = [
   "Goleiro",
@@ -40,14 +44,48 @@ export default function JogadoresPage() {
   const [numero, setNumero] = useState("");
   const [posicao, setPosicao] = useState("Meia");
   const [idade, setIdade] = useState("");
+  const [times, setTimes] = useState<Time[]>([]);
+  const [jogadores, setJogadores] = useState<Jogador[]>([]);
+  const [isLoadingJogadores, setIsLoadingJogadores] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const { data: times } = api.times.list.useQuery();
-  const { data: jogadores, refetch } = api.jogadores.listByTime.useQuery(
-    { idTime: parseInt(idTime) || 0 },
-    { enabled: !!idTime },
-  );
-  const createMutation = api.jogadores.create.useMutation();
-  const deleteMutation = api.jogadores.delete.useMutation();
+  useEffect(() => {
+    let isMounted = true;
+    listTimes()
+      .then((data) => {
+        if (isMounted) {
+          setTimes(data);
+        }
+      })
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const numericIdTime = Number(idTime);
+    if (!Number.isInteger(numericIdTime) || numericIdTime <= 0) {
+      setJogadores([]);
+      return;
+    }
+    setIsLoadingJogadores(true);
+    listJogadoresByTime(numericIdTime)
+      .then((data) => {
+        if (isMounted) {
+          setJogadores(data);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingJogadores(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [idTime]);
 
   const handleCreate = async () => {
     if (!nome || !numero || !idTime) {
@@ -55,7 +93,8 @@ export default function JogadoresPage() {
       return;
     }
     try {
-      await createMutation.mutateAsync({
+      setIsCreating(true);
+      await createJogador({
         nome,
         numero: parseInt(numero),
         posicao: posicao as
@@ -74,20 +113,33 @@ export default function JogadoresPage() {
       setPosicao("Meia");
       setIdade("");
       setIsOpen(false);
-      refetch();
+      const numericIdTime = Number(idTime);
+      if (Number.isInteger(numericIdTime)) {
+        const data = await listJogadoresByTime(numericIdTime);
+        setJogadores(data);
+      }
     } catch {
       toast.error("Falha ao criar jogador");
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleDelete = async (id: number) => {
     if (confirm("Tem certeza que deseja deletar este jogador?")) {
       try {
-        await deleteMutation.mutateAsync({ id });
+        setDeletingId(id);
+        await deleteJogador(id);
         toast.success("Jogador deletado com sucesso");
-        refetch();
+        const numericIdTime = Number(idTime);
+        if (Number.isInteger(numericIdTime)) {
+          const data = await listJogadoresByTime(numericIdTime);
+          setJogadores(data);
+        }
       } catch {
         toast.error("Falha ao deletar jogador");
+      } finally {
+        setDeletingId(null);
       }
     }
   };
@@ -95,27 +147,27 @@ export default function JogadoresPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
       <div className="container mx-auto">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="mb-8 flex items-center gap-4">
           <Link href="/">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Button>
           </Link>
         </div>
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
               Gerenciamento de Jogadores
             </h1>
-            <p className="text-slate-600 mt-2">
+            <p className="mt-2 text-slate-600">
               Cadastre e organize seus jogadores
             </p>
           </div>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
               <Button className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Novo Jogador
               </Button>
             </DialogTrigger>
@@ -190,9 +242,9 @@ export default function JogadoresPage() {
                 <Button
                   onClick={handleCreate}
                   className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  disabled={createMutation.isPending}
+                  disabled={isCreating}
                 >
-                  {createMutation.isPending ? "Criando..." : "Criar Jogador"}
+                  {isCreating ? "Criando..." : "Criar Jogador"}
                 </Button>
               </div>
             </DialogContent>
@@ -219,17 +271,23 @@ export default function JogadoresPage() {
         </div>
 
         {!idTime ? (
-          <Card className="text-center py-12">
+          <Card className="py-12 text-center">
             <CardContent>
               <p className="text-slate-600">
                 Selecione um time para visualizar seus jogadores
               </p>
             </CardContent>
           </Card>
-        ) : jogadores && jogadores.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+        ) : isLoadingJogadores ? (
+          <Card className="py-12 text-center">
+            <CardContent>
+              <p className="text-slate-600">Carregando jogadores...</p>
+            </CardContent>
+          </Card>
+        ) : jogadores.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
             {jogadores.map((jogador) => (
-              <Card key={jogador.id} className="hover:shadow-lg transition">
+              <Card key={jogador.id} className="transition hover:shadow-lg">
                 <CardHeader>
                   <CardTitle className="text-lg">
                     #{jogador.numero} - {jogador.nome}
@@ -246,16 +304,16 @@ export default function JogadoresPage() {
                   )}
                   <div className="flex gap-2 pt-4">
                     <Button variant="outline" size="sm" className="flex-1">
-                      <Edit2 className="w-4 h-4 mr-1" />
+                      <Edit2 className="mr-1 h-4 w-4" />
                       Editar
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(jogador.id)}
-                      disabled={deleteMutation.isPending}
+                      disabled={deletingId === jogador.id}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -263,16 +321,16 @@ export default function JogadoresPage() {
             ))}
           </div>
         ) : (
-          <Card className="text-center py-12">
+          <Card className="py-12 text-center">
             <CardContent>
-              <p className="text-slate-600 mb-4">
+              <p className="mb-4 text-slate-600">
                 Nenhum jogador cadastrado para este time
               </p>
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700"
                 onClick={() => setIsOpen(true)}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Adicionar Primeiro Jogador
               </Button>
             </CardContent>

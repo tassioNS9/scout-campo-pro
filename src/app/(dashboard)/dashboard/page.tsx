@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChartPieDonut } from "@/components/chart-pie-donut";
 import {
@@ -9,9 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { api } from "@/lib/api-client";
-
-import { useState } from "react";
+import { getDashboardByPartida } from "@/app/actions/get-dashboard-by-partida";
+import { listPartidas } from "@/app/actions/list-partidas";
+import type { DashboardByPartidaData } from "@/db/queries";
+import type { Partida } from "@/db/schema";
 
 const defaultDashboardData = {
   resumo: {
@@ -46,17 +48,43 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const partidaParam = searchParams.get("partida");
   const [idPartida, setIdPartida] = useState<string>(partidaParam ?? "");
-  const { data: partidas } = api.partidas.list.useQuery();
+  const [partidas, setPartidas] = useState<Partida[]>([]);
+  const [dashboard, setDashboard] = useState<DashboardByPartidaData | null>(
+    null,
+  );
   const numericIdPartida = Number(idPartida);
   const hasValidPartidaId =
     Number.isInteger(numericIdPartida) && numericIdPartida > 0;
 
-  const { data, isLoading } = api.dashboard.getByPartida.useQuery(
-    { idPartida: numericIdPartida },
-    { enabled: hasValidPartidaId },
-  );
+  useEffect(() => {
+    let isMounted = true;
+    listPartidas().then((data) => {
+      if (isMounted) {
+        setPartidas(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-  const dashboardData = data ?? defaultDashboardData;
+  useEffect(() => {
+    let isMounted = true;
+    if (!hasValidPartidaId) {
+      setDashboard(null);
+      return;
+    }
+    getDashboardByPartida(numericIdPartida).then((data) => {
+      if (isMounted) {
+        setDashboard(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [hasValidPartidaId, numericIdPartida]);
+
+  const dashboardData = dashboard ?? defaultDashboardData;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-black pb-20 text-white">
