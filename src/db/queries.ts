@@ -4,12 +4,8 @@ import { db } from "./index";
 import {
   estatisticas,
   eventos,
-  heatmaps,
   jogadores,
   partidas,
-  posseBola,
-  pressao,
-  recuperacoes,
   relatorios,
   times,
 } from "./schema";
@@ -112,7 +108,6 @@ export type DashboardByPartidaData = {
     derrotas: number;
   };
   gerais: {
-    posseBola: number;
     gols: number;
     assistencias: number;
     finalizacoes: number;
@@ -144,12 +139,11 @@ export async function getDashboardByPartida(
     return null;
   }
 
-  const [eventosPartida, possePartida] = await Promise.all([
+  const [eventosPartida] = await Promise.all([
     db
       .select({ tipoEvento: eventos.tipoEvento })
       .from(eventos)
       .where(eq(eventos.idPartida, idPartida)),
-    getPosseBolaByPartida(idPartida),
   ]);
 
   const gols = countEventosByTipo(eventosPartida, "Gol");
@@ -165,12 +159,6 @@ export async function getDashboardByPartida(
   const empates = placarTimeA === placarTimeB ? 1 : 0;
   const derrotas = placarTimeA < placarTimeB ? 1 : 0;
 
-  const posseTimeA = possePartida?.timeA ?? 0;
-  const posseTimeB = possePartida?.timeB ?? 0;
-  const totalPosse = posseTimeA + posseTimeB;
-  const posseBola =
-    totalPosse > 0 ? Math.round((posseTimeA / totalPosse) * 100) : 0;
-
   return {
     partidaId: partida.id,
     resumo: {
@@ -180,7 +168,6 @@ export async function getDashboardByPartida(
       derrotas,
     },
     gerais: {
-      posseBola,
       gols,
       assistencias,
       finalizacoes,
@@ -250,6 +237,13 @@ export async function getEstatisticasByPartida(idPartida: number) {
     .orderBy(desc(estatisticas.nota));
 }
 
+export async function getEstatisticasByJogador(idJogador: number) {
+  return await db
+    .select()
+    .from(estatisticas)
+    .where(eq(estatisticas.idJogador, idJogador));
+}
+
 export async function getEstatisticasByJogadorPartida(
   idJogador: number,
   idPartida: number,
@@ -275,121 +269,6 @@ export async function updateEstatistica(
     .update(estatisticas)
     .set({ ...data, updatedAt: new Date() })
     .where(eq(estatisticas.id, id))
-    .returning();
-  return result[0];
-}
-
-// Heatmaps queries
-export async function createHeatmap(data: typeof heatmaps.$inferInsert) {
-  const result = await db.insert(heatmaps).values(data).returning();
-  return result[0];
-}
-
-export async function getHeatmapByJogadorPartida(
-  idJogador: number,
-  idPartida: number,
-) {
-  const result = await db
-    .select()
-    .from(heatmaps)
-    .where(
-      and(eq(heatmaps.idJogador, idJogador), eq(heatmaps.idPartida, idPartida)),
-    )
-    .limit(1);
-  return result[0];
-}
-
-export async function updateHeatmap(
-  id: number,
-  data: Partial<typeof heatmaps.$inferInsert>,
-) {
-  const result = await db
-    .update(heatmaps)
-    .set({ ...data, updatedAt: new Date() })
-    .where(eq(heatmaps.id, id))
-    .returning();
-  return result[0];
-}
-
-// Posse de Bola queries
-export async function createPosseBola(data: typeof posseBola.$inferInsert) {
-  const result = await db.insert(posseBola).values(data).returning();
-  return result[0];
-}
-
-export async function getPosseBolaByPartida(idPartida: number) {
-  const result = await db
-    .select()
-    .from(posseBola)
-    .where(eq(posseBola.idPartida, idPartida))
-    .limit(1);
-  return result[0];
-}
-
-export async function updatePosseBola(
-  id: number,
-  data: Partial<typeof posseBola.$inferInsert>,
-) {
-  const result = await db
-    .update(posseBola)
-    .set({ ...data, updatedAt: new Date() })
-    .where(eq(posseBola.id, id))
-    .returning();
-  return result[0];
-}
-
-// Pressao queries
-export async function createPressao(data: typeof pressao.$inferInsert) {
-  const result = await db.insert(pressao).values(data).returning();
-  return result[0];
-}
-
-export async function getPressaoByPartida(idPartida: number) {
-  const result = await db
-    .select()
-    .from(pressao)
-    .where(eq(pressao.idPartida, idPartida))
-    .limit(1);
-  return result[0];
-}
-
-export async function updatePressao(
-  id: number,
-  data: Partial<typeof pressao.$inferInsert>,
-) {
-  const result = await db
-    .update(pressao)
-    .set({ ...data, updatedAt: new Date() })
-    .where(eq(pressao.id, id))
-    .returning();
-  return result[0];
-}
-
-// Recuperacoes queries
-export async function createRecuperacao(
-  data: typeof recuperacoes.$inferInsert,
-) {
-  const result = await db.insert(recuperacoes).values(data).returning();
-  return result[0];
-}
-
-export async function getRecuperacaoByPartida(idPartida: number) {
-  const result = await db
-    .select()
-    .from(recuperacoes)
-    .where(eq(recuperacoes.idPartida, idPartida))
-    .limit(1);
-  return result[0];
-}
-
-export async function updateRecuperacao(
-  id: number,
-  data: Partial<typeof recuperacoes.$inferInsert>,
-) {
-  const result = await db
-    .update(recuperacoes)
-    .set({ ...data, updatedAt: new Date() })
-    .where(eq(recuperacoes.id, id))
     .returning();
   return result[0];
 }
