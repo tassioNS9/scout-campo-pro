@@ -8,12 +8,8 @@ import {
 import type {
   Estatistica,
   Evento,
-  Heatmap,
   Jogador,
   Partida,
-  PosseBola,
-  Pressao,
-  Recuperacao,
   Relatorio,
   Time,
 } from "@/db/schema";
@@ -42,6 +38,7 @@ type TipoEvento =
   | "Duelo Ganho"
   | "Duelo Perdido"
   | "Gol";
+
 type Zona = "Defesa" | "Meio" | "Ataque";
 type TempoPartida = "1T" | "2T";
 type StatusPartida = "planejada" | "em_andamento" | "finalizada";
@@ -78,8 +75,8 @@ type JogadorUpdateInput = {
 };
 
 type PartidaCreateInput = {
-  timeA: number;
-  timeB: number;
+  time: string;
+  timeAdversario: string;
   data: Date;
   campeonato?: string;
   categoria: Categoria;
@@ -126,15 +123,6 @@ type EstatisticaUpdateInput = {
   nota?: string;
 };
 
-type ZoneMapCreateInput = { idJogador: number; idPartida: number };
-type ZoneMapUpdateInput = {
-  id: number;
-  defesa?: number;
-  meio?: number;
-  ataque?: number;
-};
-type TimeSplitCreateInput = { idPartida: number };
-type TimeSplitUpdateInput = { id: number; timeA?: number; timeB?: number };
 type RelatorioCreateInput = { idPartida: number };
 type RelatorioUpdateInput = {
   id: number;
@@ -313,54 +301,6 @@ export const api = {
       EstatisticaUpdateInput,
       Estatistica | undefined
     >("estatisticas/update"),
-  },
-  heatmaps: {
-    getByJogadorPartida: endpoint<
-      { idJogador: number; idPartida: number },
-      Heatmap | undefined
-    >("heatmaps/getByJogadorPartida"),
-    create: endpoint<void, never, ZoneMapCreateInput, Heatmap>(
-      "heatmaps/create",
-    ),
-    update: endpoint<void, never, ZoneMapUpdateInput, Heatmap | undefined>(
-      "heatmaps/update",
-    ),
-  },
-  posseBola: {
-    getByPartida: endpoint<{ idPartida: number }, PosseBola | undefined>(
-      "posseBola/getByPartida",
-    ),
-    create: endpoint<void, never, TimeSplitCreateInput, PosseBola>(
-      "posseBola/create",
-    ),
-    update: endpoint<void, never, TimeSplitUpdateInput, PosseBola | undefined>(
-      "posseBola/update",
-    ),
-  },
-  pressao: {
-    getByPartida: endpoint<{ idPartida: number }, Pressao | undefined>(
-      "pressao/getByPartida",
-    ),
-    create: endpoint<void, never, TimeSplitCreateInput, Pressao>(
-      "pressao/create",
-    ),
-    update: endpoint<void, never, TimeSplitUpdateInput, Pressao | undefined>(
-      "pressao/update",
-    ),
-  },
-  recuperacoes: {
-    getByPartida: endpoint<{ idPartida: number }, Recuperacao | undefined>(
-      "recuperacoes/getByPartida",
-    ),
-    create: endpoint<void, never, TimeSplitCreateInput, Recuperacao>(
-      "recuperacoes/create",
-    ),
-    update: endpoint<
-      void,
-      never,
-      TimeSplitUpdateInput,
-      Recuperacao | undefined
-    >("recuperacoes/update"),
   },
   relatorios: {
     getByPartida: endpoint<{ idPartida: number }, Relatorio | undefined>(
