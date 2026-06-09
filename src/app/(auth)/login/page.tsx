@@ -42,7 +42,6 @@ export default function LoginPage() {
 
   if (session?.user) {
     router.push("/");
-    return null;
   }
 
   const handleLogin = async (e: React.FormEvent) => {
