@@ -143,12 +143,6 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             <div className="text-center">
               <p className="mb-2 text-3xl font-black">
-                {dashboardData.gerais.posseBola}%
-              </p>
-              <p className="text-sm text-slate-400">Posse de Bola</p>
-            </div>
-            <div className="text-center">
-              <p className="mb-2 text-3xl font-black">
                 {dashboardData.gerais.gols}
               </p>
               <p className="text-sm text-slate-400">Gols</p>
