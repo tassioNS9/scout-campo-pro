@@ -131,7 +131,7 @@ export type InsertTime = typeof times.$inferInsert;
 // Jogadores table
 export const jogadores = pgTable("jogadores", {
   id: serial("id").primaryKey(),
-  nome: varchar("nome", { length: 100 }).notNull(),
+  nome: varchar("nome", { length: 100 }).notNull().unique(),
   numero: integer("numero").notNull(),
   posicao: posicaoEnum("posicao").notNull(),
   idade: integer("idade"),
