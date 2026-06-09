@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, sum } from "drizzle-orm";
 
 import { db } from "./index";
 import {
@@ -56,12 +56,25 @@ export async function getJogadoresByTime(idTime: number) {
 }
 
 export async function getJogadorById(id: number) {
-  const result = await db
-    .select()
+  const [jogador] = await db
+    .select({
+      id: jogadores.id,
+      nome: jogadores.nome,
+      numero: jogadores.numero,
+      posicao: jogadores.posicao,
+      idade: jogadores.idade,
+      idTime: jogadores.idTime,
+      totalPartidas: count(estatisticas.idPartida),
+      totalGols: sum(estatisticas.gols),
+      totalAssistencias: sum(estatisticas.assistencias),
+      totalFinalizacoesCertas: sum(estatisticas.finalizacaoCerta),
+      totalFinalizacoesErradas: sum(estatisticas.finalizacaoErrada),
+    })
     .from(jogadores)
+    .leftJoin(estatisticas, eq(jogadores.id, estatisticas.idJogador))
     .where(eq(jogadores.id, id))
-    .limit(1);
-  return result[0];
+    .groupBy(jogadores.id);
+  return jogador;
 }
 
 export async function updateJogador(
