@@ -65,7 +65,7 @@ export default function PartidasPage() {
   };
 
   useEffect(() => {
-    void loadData();
+    loadData();
   }, []);
 
   const handleCreate = async () => {
