@@ -135,7 +135,9 @@ export const jogadores = pgTable("jogadores", {
   numero: integer("numero").notNull(),
   posicao: posicaoEnum("posicao").notNull(),
   idade: integer("idade"),
-  idTime: integer("idTime").notNull(),
+  idTime: integer("idTime")
+    .notNull()
+    .references(() => times.id, { onDelete: "cascade" }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
@@ -164,8 +166,12 @@ export type InsertPartida = typeof partidas.$inferInsert;
 // Eventos table
 export const eventos = pgTable("eventos", {
   id: serial("id").primaryKey(),
-  idPartida: integer("idPartida").notNull(),
-  idJogador: integer("idJogador").notNull(),
+  idPartida: integer("idPartida")
+    .notNull()
+    .references(() => partidas.id, { onDelete: "cascade" }),
+  idJogador: integer("idJogador")
+    .notNull()
+    .references(() => jogadores.id, { onDelete: "cascade" }),
   tipoEvento: tipoEventoEnum("tipoEvento").notNull(),
   minuto: integer("minuto").notNull(),
   tempo: tempoEnum("tempo").notNull(),
@@ -179,8 +185,12 @@ export type InsertEvento = typeof eventos.$inferInsert;
 // Estatisticas table
 export const estatisticas = pgTable("estatisticas", {
   id: serial("id").primaryKey(),
-  idJogador: integer("idJogador").notNull(),
-  idPartida: integer("idPartida").notNull(),
+  idJogador: integer("idJogador")
+    .notNull()
+    .references(() => jogadores.id, { onDelete: "cascade" }),
+  idPartida: integer("idPartida")
+    .notNull()
+    .references(() => partidas.id, { onDelete: "cascade" }),
   finalizacaoCerta: integer("finalizacaoCerta").default(0),
   finalizacaoErrada: integer("finalizacaoErrada").default(0),
   assistencias: integer("assistencias").default(0),
@@ -204,8 +214,12 @@ export type InsertEstatistica = typeof estatisticas.$inferInsert;
 // Relatorios table
 export const relatorios = pgTable("relatorios", {
   id: serial("id").primaryKey(),
-  idPartida: integer("idPartida").notNull(),
-  melhorJogador: integer("melhorJogador"),
+  idPartida: integer("idPartida")
+    .notNull()
+    .references(() => partidas.id, { onDelete: "cascade" }),
+  melhorJogador: integer("melhorJogador").references(() => jogadores.id, {
+    onDelete: "set null",
+  }),
   analiseAoVivo: text("analiseAoVivo"),
   sugestoesAoVivo: text("sugestoesAoVivo"),
   pdfUrl: varchar("pdfUrl", { length: 500 }),
