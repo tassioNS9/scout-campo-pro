@@ -9,6 +9,7 @@ import {
   relatorios,
   times,
 } from "./schema";
+import { totalmem } from "os";
 
 // Times queries
 export async function createTime(data: typeof times.$inferInsert) {
@@ -69,6 +70,15 @@ export async function getJogadorById(id: number) {
       totalAssistencias: sum(estatisticas.assistencias),
       totalFinalizacoesCertas: sum(estatisticas.finalizacaoCerta),
       totalFinalizacoesErradas: sum(estatisticas.finalizacaoErrada),
+      totalDriblesCertos: sum(estatisticas.dribleCerto),
+      totalDriblesErrados: sum(estatisticas.dribleErrado),
+      totalDesarmes: sum(estatisticas.desarmes),
+      totalInterceptacoes: sum(estatisticas.interceptacoes),
+      totalGanhoBola: sum(estatisticas.ganhoBola),
+      totalPerdaBola: sum(estatisticas.perdaBola),
+      totalFaltas: sum(estatisticas.faltas),
+      totalCruzamentos: sum(estatisticas.cruzamentos),
+      totalNota: sum(estatisticas.nota),
     })
     .from(jogadores)
     .leftJoin(estatisticas, eq(jogadores.id, estatisticas.idJogador))
@@ -257,21 +267,13 @@ export async function getEstatisticasByJogador(idJogador: number) {
     .where(eq(estatisticas.idJogador, idJogador));
 }
 
-export async function getEstatisticasByJogadorPartida(
-  idJogador: number,
-  idPartida: number,
-) {
+export async function getEstatisticasByJogadorPartida(idJogador: number) {
   const result = await db
     .select()
     .from(estatisticas)
-    .where(
-      and(
-        eq(estatisticas.idJogador, idJogador),
-        eq(estatisticas.idPartida, idPartida),
-      ),
-    )
-    .limit(1);
-  return result[0];
+    .where(and(eq(estatisticas.idJogador, idJogador)));
+
+  return result;
 }
 
 export async function updateEstatistica(
