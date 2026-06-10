@@ -9,7 +9,6 @@ import {
   relatorios,
   times,
 } from "./schema";
-import { totalmem } from "os";
 
 // Times queries
 export async function createTime(data: typeof times.$inferInsert) {
