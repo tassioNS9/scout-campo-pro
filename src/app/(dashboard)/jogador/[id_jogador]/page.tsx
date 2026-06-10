@@ -1,9 +1,5 @@
 import { getJogadorById } from "@/app/actions/get-jogador-by-id";
-import {
-  getEstatisticasByJogador,
-  getPartidas,
-  getTimesAll,
-} from "@/db/queries";
+import { getEstatisticasByJogador } from "@/db/queries";
 import { PlayerDashboard } from "./components/PlayerDashboard";
 import type { PlayerDashboardPlayer } from "./components/PlayerDashboard";
 const JogadorDetails = async ({
@@ -15,9 +11,8 @@ const JogadorDetails = async ({
 
   if (!id_jogador) return null;
 
-  const [jogador, partidas, times] = await Promise.all([
+  const [jogador, times] = await Promise.all([
     getJogadorById(id_jogador),
-    getPartidas(),
     getEstatisticasByJogador(id_jogador),
   ]);
   console.log("Jogador encontradorrrr:", times);
