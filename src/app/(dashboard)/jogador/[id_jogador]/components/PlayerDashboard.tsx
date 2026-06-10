@@ -10,7 +10,7 @@ interface MatchStats {
   finalizacaoCerta: number;
   finalizacaoErrada: number;
   assistencias: number;
-  dribloCerto: number;
+  dribleCerto: number;
   dribleErrado: number;
   cruzamentos: number;
   interceptacoes: number;
@@ -30,25 +30,28 @@ interface Match {
 }
 
 interface PlayerStats {
-  goals: number;
-  matches: number;
-  assists: number;
-  tackles: number;
-  yellowCards: number;
-  redCards: number;
-  shots: number;
-  corners: number;
+  totalGols: string;
+  totalPartidas: number;
+  totalFinalizacoesCertas: string;
+  totalFinalizacoesErradas: string;
+  totalAssistencias: string;
+  totalDriblesCertos: string;
+  totalDriblesErrados: string;
+  totalCruzamentos: string;
+  totalDesarmes: string;
+  totalInterceptacoes: string;
+  totalGanhoBola: string;
+  totalPerdaBola: string;
+  totalFaltas: string;
+  totalNota: string;
 }
 
 export type PlayerDashboardPlayer = {
-  fullName: string;
-  mainPosition: string;
-  alternativePositions: string[];
-  age?: number;
-  rating: number;
+  nome: string;
+  posicao: string;
+  idade: number;
+  numero: number;
   stats: PlayerStats;
-  playerNumber: number;
-  team: string;
   matchHistory: Match[];
 };
 
@@ -87,46 +90,26 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
     "geral" | "estatisticas" | "historico"
   >("geral");
 
-  // Calculate aggregate stats from match history
-  const aggregateStats = player.matchHistory.reduce(
-    (acc, match) => ({
-      finalizacaoCerta: acc.finalizacaoCerta + match.stats.finalizacaoCerta,
-      finalizacaoErrada: acc.finalizacaoErrada + match.stats.finalizacaoErrada,
-      assistencias: acc.assistencias + match.stats.assistencias,
-      dribloCerto: acc.dribloCerto + match.stats.dribloCerto,
-      dribleErrado: acc.dribleErrado + match.stats.dribleErrado,
-      cruzamentos: acc.cruzamentos + match.stats.cruzamentos,
-      interceptacoes: acc.interceptacoes + match.stats.interceptacoes,
-      ganhoBola: acc.ganhoBola + match.stats.ganhoBola,
-      perdaBola: acc.perdaBola + match.stats.perdaBola,
-      faltas: acc.faltas + match.stats.faltas,
-    }),
-    {
-      finalizacaoCerta: 0,
-      finalizacaoErrada: 0,
-      assistencias: 0,
-      dribloCerto: 0,
-      dribleErrado: 0,
-      cruzamentos: 0,
-      interceptacoes: 0,
-      ganhoBola: 0,
-      perdaBola: 0,
-      faltas: 0,
-    },
-  );
-  const hasMatches = player.stats.matches > 0;
-  const displayRating = hasMatches ? player.rating.toFixed(1) : "—";
+  const hasMatches = player.stats.totalPartidas > 0;
+  const displayRating = hasMatches ? player.stats.totalNota : "—";
+  const aggregateStats = player.stats;
   const aggregateItems = [
-    { label: "Finalizações Certas", value: aggregateStats.finalizacaoCerta },
-    { label: "Finalizações Erradas", value: aggregateStats.finalizacaoErrada },
-    { label: "Assistências", value: aggregateStats.assistencias },
-    { label: "Dribles Certos", value: aggregateStats.dribloCerto },
-    { label: "Dribles Errados", value: aggregateStats.dribleErrado },
-    { label: "Cruzamentos", value: aggregateStats.cruzamentos },
-    { label: "Interceptações", value: aggregateStats.interceptacoes },
-    { label: "Ganho de Bola", value: aggregateStats.ganhoBola },
-    { label: "Perda de Bola", value: aggregateStats.perdaBola },
-    { label: "Faltas", value: aggregateStats.faltas },
+    {
+      label: "Finalizações Certas",
+      value: aggregateStats.totalFinalizacoesCertas,
+    },
+    {
+      label: "Finalizações Erradas",
+      value: aggregateStats.totalFinalizacoesErradas,
+    },
+    { label: "Assistências", value: aggregateStats.totalAssistencias },
+    { label: "Dribles Certos", value: aggregateStats.totalDriblesCertos },
+    { label: "Dribles Errados", value: aggregateStats.totalDriblesErrados },
+    { label: "Cruzamentos", value: aggregateStats.totalCruzamentos },
+    { label: "Interceptações", value: aggregateStats.totalInterceptacoes },
+    { label: "Ganho de Bola", value: aggregateStats.totalGanhoBola },
+    { label: "Perda de Bola", value: aggregateStats.totalPerdaBola },
+    { label: "Faltas", value: aggregateStats.totalFaltas },
   ];
 
   return (
@@ -165,16 +148,14 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
             {/* Player Name and Info */}
             <div className="flex-1 text-center md:text-left">
               <h1 className="mt-3 text-2xl font-bold text-white md:mt-0 md:text-4xl">
-                {player.fullName}
+                {player.nome}
               </h1>
               <div className="mt-2 space-y-1 text-xs text-emerald-400 md:text-base">
-                <p>{player.team}</p>
-                <p className="text-primary font-semibold">
-                  {player.mainPosition}
-                </p>
+                {/* <p>{player.team}</p> */}
+                <p className="text-primary font-semibold">{player.posicao}</p>
                 <p>
-                  {player.age ? `Idade: ${player.age} anos` : "Idade: —"} |
-                  Número: {player.playerNumber}
+                  {player.idade ? `Idade: ${player.idade} anos` : "Idade: —"} |
+                  Número: {player.numero}
                 </p>
               </div>
 
@@ -185,24 +166,23 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
                   <p className="text-primary mt-1 text-3xl font-bold">
                     {displayRating}
                   </p>
-                  {hasMatches && renderStars(player.rating)}
                 </div>
                 <div className="rounded-xl bg-zinc-800 p-4">
                   <p className="text-sm text-zinc-400">Gols</p>
                   <p className="mt-1 text-3xl font-bold text-white">
-                    {player.stats.goals}
+                    {player.stats.totalGols}
                   </p>
                 </div>
                 <div className="rounded-xl bg-zinc-800 p-4">
                   <p className="text-sm text-zinc-400">Assistências</p>
                   <p className="mt-1 text-3xl font-bold text-white">
-                    {player.stats.assists}
+                    {player.stats.totalAssistencias}
                   </p>
                 </div>
                 <div className="rounded-xl bg-zinc-800 p-4">
                   <p className="text-sm text-zinc-400">Jogos</p>
                   <p className="mt-1 text-3xl font-bold text-white">
-                    {player.stats.matches}
+                    {player.stats.totalPartidas}
                   </p>
                 </div>
               </div>
@@ -258,28 +238,26 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
                   <p className="text-primary text-5xl font-bold">
                     {displayRating}
                   </p>
-                  {hasMatches && (
-                    <div className="mt-2">{renderStars(player.rating)}</div>
-                  )}
+                  {hasMatches && <div className="mt-2">{renderStars(8.3)}</div>}
                 </div>
 
                 <div className="space-y-2 rounded-2xl bg-zinc-800 p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-zinc-400">Gols</span>
                     <span className="font-semibold text-white">
-                      {player.stats.goals}
+                      {player.stats.totalGols}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-zinc-400">Assistências</span>
                     <span className="font-semibold text-white">
-                      {player.stats.assists}
+                      {player.stats.totalAssistencias}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-zinc-400">Desarmes</span>
                     <span className="font-semibold text-white">
-                      {player.stats.tackles}
+                      {player.stats.totalDesarmes}
                     </span>
                   </div>
                 </div>
@@ -299,13 +277,13 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
                       <div className="flex items-center gap-1">
                         <div className="h-4 w-3 rounded-sm bg-yellow-400 md:h-5 md:w-4"></div>
                         <span className="text-sm font-semibold text-white md:text-base">
-                          {player.stats.yellowCards}
+                          {1}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
                         <div className="bg-destructive h-4 w-3 rounded-sm md:h-5 md:w-4"></div>
                         <span className="text-sm font-semibold text-white md:text-base">
-                          {player.stats.redCards}
+                          {2}
                         </span>
                       </div>
                     </div>
@@ -316,7 +294,7 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
                       Assistências
                     </span>
                     <span className="text-sm font-semibold text-white md:text-base">
-                      {player.stats.assists}
+                      {player.stats.totalAssistencias}
                     </span>
                   </div>
 
@@ -325,7 +303,7 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
                       Finalizações
                     </span>
                     <span className="text-sm font-semibold text-white md:text-base">
-                      {player.stats.shots}
+                      {player.stats.totalFinalizacoesCertas}
                     </span>
                   </div>
 
@@ -334,7 +312,7 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
                       Cruzamentos
                     </span>
                     <span className="text-sm font-semibold text-white md:text-base">
-                      {player.stats.corners}
+                      {player.stats.totalCruzamentos}
                     </span>
                   </div>
                 </div>
@@ -414,7 +392,7 @@ export function PlayerDashboard({ player }: PlayerDashboardProps) {
                           },
                           {
                             label: "Dribles",
-                            value: `${match.stats.dribloCerto}/${match.stats.dribleErrado}`,
+                            value: `${match.stats.dribleCerto}/${match.stats.dribleErrado}`,
                           },
                           {
                             label: "Interceptações",
