@@ -52,12 +52,11 @@ export default function JogadoresPage() {
 
   useEffect(() => {
     let isMounted = true;
-    listTimes()
-      .then((data) => {
-        if (isMounted) {
-          setTimes(data);
-        }
-      })
+    listTimes().then((data) => {
+      if (isMounted) {
+        setTimes(data);
+      }
+    });
     return () => {
       isMounted = false;
     };
@@ -88,7 +87,7 @@ export default function JogadoresPage() {
   }, [idTime]);
 
   const handleCreate = async () => {
-    if (!nome || !numero || !idTime) {
+    if (!nome.trim() || !numero || !idTime) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
@@ -104,7 +103,7 @@ export default function JogadoresPage() {
           | "Volante"
           | "Meia"
           | "Atacante",
-        idade: idade ? parseInt(idade) : undefined,
+        idade: parseInt(idade),
         idTime: parseInt(idTime),
       });
       toast.success("Jogador criado com sucesso");
