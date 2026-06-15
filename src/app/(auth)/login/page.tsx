@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -40,9 +40,11 @@ export default function LoginPage() {
   const [registerPassword, setRegisterPassword] = useState("");
   const [registerProfileType, setRegisterProfileType] = useState("Analista");
 
-  if (session?.user) {
-    router.push("/");
-  }
+  useEffect(() => {
+    if (session?.user) {
+      router.push("/");
+    }
+  }, [session, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
