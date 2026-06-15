@@ -1,5 +1,6 @@
 import {
   boolean,
+  char,
   decimal,
   integer,
   pgEnum,
@@ -9,6 +10,7 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm/relations";
 
 // Better-auth required tables
 export const user = pgTable("user", {
@@ -93,6 +95,8 @@ export const resultadoEnum = pgEnum("resultado", [
   "Sem Resultado",
 ]);
 
+export const casaOuForaEnum = pgEnum("casa_ou_fora", ["casa", "fora"]);
+
 export const tipoEventoEnum = pgEnum("tipo_evento", [
   "Finalização Certa",
   "Finalização Errada",
@@ -121,7 +125,7 @@ export const times = pgTable("times", {
   nome: varchar("nome", { length: 100 }).notNull().unique(),
   categoria: categoriaEnum("categoria").notNull(),
   cidade: varchar("cidade", { length: 100 }),
-  estado: varchar("estado", { length: 2 }),
+  estado: char("estado", { length: 2 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
@@ -131,7 +135,7 @@ export type InsertTime = typeof times.$inferInsert;
 // Jogadores table
 export const jogadores = pgTable("jogadores", {
   id: serial("id").primaryKey(),
-  nome: varchar("nome", { length: 100 }).notNull().unique(),
+  nome: varchar("nome", { length: 100 }).notNull(),
   numero: integer("numero").notNull(),
   posicao: posicaoEnum("posicao").notNull(),
   idade: integer("idade").notNull(),
@@ -144,17 +148,23 @@ export const jogadores = pgTable("jogadores", {
 export type Jogador = typeof jogadores.$inferSelect;
 export type InsertJogador = typeof jogadores.$inferInsert;
 
+export const timesTableRelations = relations(times, ({ many }) => ({
+  jogadores: many(jogadores),
+}));
+
 // Partidas table
 export const partidas = pgTable("partidas", {
   id: serial("id").primaryKey(),
-  time: varchar("timeA", { length: 100 }).notNull(),
-  timeAdversario: varchar("timeB", { length: 100 }).notNull(),
+  idTime: integer("idTime")
+    .notNull()
+    .references(() => times.id, { onDelete: "cascade" }),
+  nomeTimeAdversario: varchar("nomeTimeAdversario", { length: 100 }).notNull(),
   data: timestamp("data").notNull(),
   campeonato: varchar("campeonato", { length: 100 }),
   categoria: categoriaEnum("categoria").notNull(),
-  formacao: varchar("formacao", { length: 50 }),
-  placarTimeA: integer("placarTimeA").default(0),
-  placarTimeB: integer("placarTimeB").default(0),
+  casaOuFora: casaOuForaEnum("casaOuFora").default("casa").notNull(),
+  placarTime: integer("placarTime").default(0).notNull(),
+  placarTimeAdversario: integer("placarTimeAdversario").default(0).notNull(),
   status: statusPartidaEnum("status").default("planejada"),
   resultado: resultadoEnum("resultado").default("Sem Resultado"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -162,6 +172,24 @@ export const partidas = pgTable("partidas", {
 });
 export type Partida = typeof partidas.$inferSelect;
 export type InsertPartida = typeof partidas.$inferInsert;
+
+export const partidasTableRelations = relations(partidas, ({ one }) => ({
+  time: one(times, {
+    fields: [partidas.idTime],
+    references: [times.id],
+  }),
+}));
+
+export const jogadoresTableRelations = relations(
+  jogadores,
+  ({ one, many }) => ({
+    time: one(times, {
+      fields: [jogadores.idTime],
+      references: [times.id],
+    }),
+    eventos: many(eventos),
+  }),
+);
 
 // Eventos table
 export const eventos = pgTable("eventos", {
@@ -181,6 +209,17 @@ export const eventos = pgTable("eventos", {
 });
 export type Evento = typeof eventos.$inferSelect;
 export type InsertEvento = typeof eventos.$inferInsert;
+
+export const eventosTableRelations = relations(eventos, ({ one }) => ({
+  partida: one(partidas, {
+    fields: [eventos.idPartida],
+    references: [partidas.id],
+  }),
+  jogador: one(jogadores, {
+    fields: [eventos.idJogador],
+    references: [jogadores.id],
+  }),
+}));
 
 // Estatisticas table
 export const estatisticas = pgTable("estatisticas", {
@@ -211,6 +250,20 @@ export const estatisticas = pgTable("estatisticas", {
 export type Estatistica = typeof estatisticas.$inferSelect;
 export type InsertEstatistica = typeof estatisticas.$inferInsert;
 
+export const estatisticasTableRelations = relations(
+  estatisticas,
+  ({ one }) => ({
+    jogador: one(jogadores, {
+      fields: [estatisticas.idJogador],
+      references: [jogadores.id],
+    }),
+    partida: one(partidas, {
+      fields: [estatisticas.idPartida],
+      references: [partidas.id],
+    }),
+  }),
+);
+
 // Relatorios table
 export const relatorios = pgTable("relatorios", {
   id: serial("id").primaryKey(),
@@ -226,5 +279,13 @@ export const relatorios = pgTable("relatorios", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
+
 export type Relatorio = typeof relatorios.$inferSelect;
 export type InsertRelatorio = typeof relatorios.$inferInsert;
+
+export const relatoriosTableRelations = relations(relatorios, ({ one }) => ({
+  partida: one(partidas, {
+    fields: [relatorios.idPartida],
+    references: [partidas.id],
+  }),
+}));
