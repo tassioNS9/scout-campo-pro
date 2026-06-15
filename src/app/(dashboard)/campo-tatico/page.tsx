@@ -1,13 +1,14 @@
 "use client";
+import { Plus } from "lucide-react";
 import {
   type PointerEvent as ReactPointerEvent,
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus } from "lucide-react";
-import { toast } from "sonner";
 
 interface Jogador {
   numero: number;
@@ -102,12 +103,6 @@ export default function CampoTatico() {
     null,
   );
   const campoRef = useRef<SVGSVGElement>(null);
-  const [eventos, setEventos] = useState({
-    gols: 0,
-    assistencias: 0,
-    finalizacoes: 0,
-    desarmes: 0,
-  });
 
   const getFormacaoStats = () => {
     const stats = { goleiros: 0, defesa: 0, meio: 0, ataque: 0 };
@@ -177,33 +172,6 @@ export default function CampoTatico() {
     setJogadorArrastando(null);
   };
 
-  // Handlers para eventos
-  const handleEvento = (tipo: keyof typeof eventos) => {
-    setEventos((prev) => ({
-      ...prev,
-      [tipo]: prev[tipo] + 1,
-    }));
-
-    const mensagens = {
-      gols: "⚽ Gol marcado!",
-      assistencias: "👟 Assistência registrada!",
-      finalizacoes: "🎯 Finalização registrada!",
-      desarmes: "🛡️ Desarme registrado!",
-    };
-
-    toast.success(mensagens[tipo]);
-  };
-
-  const resetarEventos = () => {
-    setEventos({
-      gols: 0,
-      assistencias: 0,
-      finalizacoes: 0,
-      desarmes: 0,
-    });
-    toast.info("Eventos resetados!");
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
@@ -223,19 +191,19 @@ export default function CampoTatico() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid gap-8 lg:grid-cols-4">
           {/* Left Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="space-y-6 lg:col-span-1">
             {/* Formação */}
-            <Card className="bg-slate-800 border-slate-700 p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Formação</h3>
+            <Card className="border-slate-700 bg-slate-800 p-6">
+              <h3 className="mb-4 text-lg font-bold text-white">Formação</h3>
               <select
                 value={formacao}
                 onChange={(e) => {
                   setFormacao(e.target.value);
                   toast.success(`Formação alterada para ${e.target.value}!`);
                 }}
-                className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2 mb-4 cursor-pointer hover:border-green-500 transition"
+                className="mb-4 w-full cursor-pointer rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white transition hover:border-green-500"
               >
                 <option value="4-3-3">4-3-3</option>
                 <option value="4-4-2">4-4-2</option>
@@ -249,62 +217,24 @@ export default function CampoTatico() {
               </div>
             </Card>
 
-            {/* Eventos */}
-            <Card className="bg-slate-800 border-slate-700 p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Eventos</h3>
-              <div className="space-y-3">
-                <Button
-                  onClick={() => handleEvento("gols")}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 transition"
-                >
-                  ⚽ Gol ({eventos.gols})
-                </Button>
-                <Button
-                  onClick={() => handleEvento("assistencias")}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 transition"
-                >
-                  👟 Assistência ({eventos.assistencias})
-                </Button>
-                <Button
-                  onClick={() => handleEvento("finalizacoes")}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 transition"
-                >
-                  🎯 Finalização ({eventos.finalizacoes})
-                </Button>
-                <Button
-                  onClick={() => handleEvento("desarmes")}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 transition"
-                >
-                  🛡️ Desarme ({eventos.desarmes})
-                </Button>
-                <Button
-                  onClick={resetarEventos}
-                  variant="outline"
-                  className="w-full text-slate-300 border-slate-600 hover:bg-slate-700 py-2 transition"
-                >
-                  🔄 Resetar
-                </Button>
-              </div>
-            </Card>
-
             {/* Jogadores List */}
-            <Card className="bg-slate-800 border-slate-700 p-6">
-              <h3 className="text-lg font-bold text-white mb-4">Escalação</h3>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+            <Card className="border-slate-700 bg-slate-800 p-6">
+              <h3 className="mb-4 text-lg font-bold text-white">Escalação</h3>
+              <div className="max-h-96 space-y-2 overflow-y-auto">
                 {jogadores.map((j) => (
                   <div
                     key={j.numero}
-                    className="bg-slate-700 rounded-lg p-3 hover:bg-slate-600 transition"
+                    className="rounded-lg bg-slate-700 p-3 transition hover:bg-slate-600"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="bg-green-600 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-sm font-bold text-white">
                         {j.numero}
                       </div>
                       <div className="flex-1">
-                        <p className="text-white font-semibold text-sm">
+                        <p className="text-sm font-semibold text-white">
                           {j.nome}
                         </p>
-                        <p className="text-slate-400 text-xs">{j.posicao}</p>
+                        <p className="text-xs text-slate-400">{j.posicao}</p>
                       </div>
                     </div>
                   </div>
@@ -313,15 +243,15 @@ export default function CampoTatico() {
             </Card>
 
             {/* Add Player */}
-            <Button className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 py-2 transition">
-              <Plus className="w-4 h-4" />
+            <Button className="flex w-full items-center gap-2 bg-green-600 py-2 text-white transition hover:bg-green-700">
+              <Plus className="h-4 w-4" />
               Adicionar Jogador
             </Button>
           </div>
 
           {/* Campo Tático */}
           <div className="lg:col-span-3">
-            <Card className="bg-gradient-to-b from-green-900 to-green-800 border-green-700 p-8">
+            <Card className="border-green-700 bg-gradient-to-b from-green-900 to-green-800 p-8">
               {/* Campo SVG */}
               <svg
                 ref={campoRef}
@@ -330,7 +260,7 @@ export default function CampoTatico() {
                 onPointerUp={finalizarArraste}
                 onPointerLeave={finalizarArraste}
                 onPointerCancel={finalizarArraste}
-                className="w-full bg-gradient-to-b from-green-700 to-green-800 rounded-lg border-4 border-white touch-none select-none"
+                className="w-full touch-none rounded-lg border-4 border-white bg-gradient-to-b from-green-700 to-green-800 select-none"
               >
                 <g fill="none" stroke="white" strokeWidth="0.5">
                   {/* Limites e meio campo */}
@@ -390,29 +320,29 @@ export default function CampoTatico() {
 
               {/* Legend */}
               {/* Formation Info */}
-              <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mt-6">
-                <h3 className="text-lg font-bold mb-4">Formação: {formacao}</h3>
+              <div className="mt-6 rounded-xl border border-slate-700 bg-slate-800/50 p-6">
+                <h3 className="mb-4 text-lg font-bold">Formação: {formacao}</h3>
                 <div className="grid grid-cols-4 gap-4">
                   <div className="text-center">
-                    <p className="text-sm text-slate-400 mb-2">Goleiro</p>
+                    <p className="mb-2 text-sm text-slate-400">Goleiro</p>
                     <p className="text-2xl font-black text-blue-400">
                       {stats.goleiros}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-slate-400 mb-2">Defesa</p>
+                    <p className="mb-2 text-sm text-slate-400">Defesa</p>
                     <p className="text-2xl font-black text-blue-400">
                       {stats.defesa}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-slate-400 mb-2">Meio</p>
+                    <p className="mb-2 text-sm text-slate-400">Meio</p>
                     <p className="text-2xl font-black text-blue-400">
                       {stats.meio}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-slate-400 mb-2">Ataque</p>
+                    <p className="mb-2 text-sm text-slate-400">Ataque</p>
                     <p className="text-2xl font-black text-blue-400">
                       {stats.ataque}
                     </p>
