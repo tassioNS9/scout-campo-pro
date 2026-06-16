@@ -1,10 +1,46 @@
 "use client";
 
+import {
+  ArrowLeft,
+  ClipboardList,
+  Pencil,
+  Plus,
+  Shield,
+  Swords,
+  Trash2,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import { createJogador } from "@/app/actions/create-jogador";
+import { deleteJogador } from "@/app/actions/delete-jogador";
+import { listJogadoresByTime } from "@/app/actions/list-jogadores-by-time";
+import { listTimes } from "@/app/actions/list-times";
+import { updateJogador } from "@/app/actions/update-jogador";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { Jogador, Time } from "@/db/schema";
+
+import SearchFilter from "./components/SearchFilter";
+import { C } from "@/constants/Colors";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -12,23 +48,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Plus, Trash2, Edit2, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
-import Link from "next/link";
-import { createJogador } from "@/app/actions/create-jogador";
-import { deleteJogador } from "@/app/actions/delete-jogador";
-import { listJogadoresByTime } from "@/app/actions/list-jogadores-by-time";
-import { listTimes } from "@/app/actions/list-times";
-import type { Jogador, Time } from "@/db/schema";
 
-const POSICOES = [
+const positionStyles: Record<string, string> = {
+  Goleiro: "bg-green-500/20 text-green-400 border-green-500/30",
+  Zagueiro: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  Lateral: "bg-sky-500/20 text-sky-400 border-sky-500/30",
+  Meia: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  Atacante: "bg-red-500/20 text-red-400 border-red-500/30",
+  Volante: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+};
+
+const positionColors: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  Goleiro: { bg: "#1a2e1a", text: "#4ade80", border: "#1a4a1a" },
+  Zagueiro: { bg: "#1a2540", text: "#60a5fa", border: "#1a3560" },
+  Lateral: { bg: "#1a2540", text: "#93c5fd", border: "#1a3560" },
+  Meia: { bg: "#2e2018", text: "#fb923c", border: "#4a2e10" },
+  Atacante: { bg: "#2e1a1a", text: "#f87171", border: "#4a1a1a" },
+  Volante: { bg: "#201a2e", text: "#c084fc", border: "#301a4a" },
+};
+
+const positionGroups = [
   "Goleiro",
   "Zagueiro",
   "Lateral",
@@ -38,23 +80,30 @@ const POSICOES = [
 ];
 
 export default function JogadoresPage() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [idTime, setIdTime] = useState("");
-  const [nome, setNome] = useState("");
-  const [numero, setNumero] = useState("");
-  const [posicao, setPosicao] = useState("Meia");
-  const [idade, setIdade] = useState("");
   const [times, setTimes] = useState<Time[]>([]);
   const [jogadores, setJogadores] = useState<Jogador[]>([]);
-  const [isLoadingJogadores, setIsLoadingJogadores] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<Time | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<Jogador | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [isLoadingJogadores, setIsLoadingJogadores] = useState(true);
+
+  const [formData, setFormData] = useState({
+    numero: "",
+    nome: "",
+    posicao: "Atacante",
+    idade: "",
+  });
 
   useEffect(() => {
     let isMounted = true;
     listTimes().then((data) => {
       if (isMounted) {
         setTimes(data);
+        if (data.length > 0) {
+          setSelectedTeam(data[0]);
+        }
       }
     });
     return () => {
@@ -64,13 +113,13 @@ export default function JogadoresPage() {
 
   useEffect(() => {
     let isMounted = true;
-    const numericIdTime = Number(idTime);
-    if (!Number.isInteger(numericIdTime) || numericIdTime <= 0) {
+    if (!selectedTeam?.id) {
       setJogadores([]);
+      setIsLoadingJogadores(false);
       return;
     }
     setIsLoadingJogadores(true);
-    listJogadoresByTime(numericIdTime)
+    listJogadoresByTime(selectedTeam.id)
       .then((data) => {
         if (isMounted) {
           setJogadores(data);
@@ -84,258 +133,730 @@ export default function JogadoresPage() {
     return () => {
       isMounted = false;
     };
-  }, [idTime]);
+  }, [selectedTeam?.id]);
 
-  const handleCreate = async () => {
-    if (!nome.trim() || !numero || !idTime) {
+  const filteredPlayers = jogadores.filter(
+    (p) =>
+      p.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.posicao.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const handleDelete = async (id: number) => {
+    if (confirm("Tem certeza que deseja deletar este jogador?")) {
+      try {
+        await deleteJogador(id);
+        setJogadores((prev) => prev.filter((p) => p.id !== id));
+        toast.success("Jogador apagado com sucesso");
+      } catch (err) {
+        toast.error("Erro ao apagar jogador!");
+      }
+    }
+  };
+
+  const handleEdit = (player: Jogador) => {
+    setEditingPlayer(player);
+    setFormData({
+      numero: String(player.numero),
+      nome: player.nome,
+      posicao: player.posicao,
+      idade: player.idade ? String(player.idade) : "",
+    });
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!formData.nome || !formData.numero || !selectedTeam) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
     try {
       setIsCreating(true);
-      await createJogador({
-        nome,
-        numero: parseInt(numero),
-        posicao: posicao as
-          | "Goleiro"
-          | "Zagueiro"
-          | "Lateral"
-          | "Volante"
-          | "Meia"
-          | "Atacante",
-        idade: parseInt(idade),
-        idTime: parseInt(idTime),
-      });
-      toast.success("Jogador criado com sucesso");
-      setNome("");
-      setNumero("");
-      setPosicao("Meia");
-      setIdade("");
-      setIsOpen(false);
-      const numericIdTime = Number(idTime);
-      if (Number.isInteger(numericIdTime)) {
-        const data = await listJogadoresByTime(numericIdTime);
-        setJogadores(data);
+      if (editingPlayer) {
+        await updateJogador({
+          id: editingPlayer.id,
+          nome: formData.nome,
+          numero: Number(formData.numero),
+          posicao: formData.posicao as any,
+          idade: Number(formData.idade) || undefined,
+        });
+        toast.success("Jogador atualizado com sucesso!");
+      } else {
+        await createJogador({
+          nome: formData.nome,
+          numero: Number(formData.numero),
+          posicao: formData.posicao as any,
+          idade: Number(formData.idade),
+          idTime: selectedTeam.id,
+        });
+        toast.success("Jogador adicionado com sucesso!");
       }
-    } catch {
-      toast.error("Falha ao criar jogador");
+      const data = await listJogadoresByTime(selectedTeam.id);
+      setJogadores(data);
+      setShowForm(false);
+      setEditingPlayer(null);
+      setFormData({ numero: "", nome: "", posicao: "Atacante", idade: "" });
+    } catch (error) {
+      toast.error("Erro ao salvar jogador");
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm("Tem certeza que deseja deletar este jogador?")) {
-      try {
-        setDeletingId(id);
-        await deleteJogador(id);
-        toast.success("Jogador deletado com sucesso");
-        const numericIdTime = Number(idTime);
-        if (Number.isInteger(numericIdTime)) {
-          const data = await listJogadoresByTime(numericIdTime);
-          setJogadores(data);
-        }
-      } catch {
-        toast.error("Falha ao deletar jogador");
-      } finally {
-        setDeletingId(null);
-      }
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-      <div className="container mx-auto">
-        <div className="mb-8 flex items-center gap-4">
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar
-            </Button>
-          </Link>
-        </div>
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              Gerenciamento de Jogadores
-            </h1>
-            <p className="mt-2 text-slate-600">
-              Cadastre e organize seus jogadores
-            </p>
-          </div>
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Jogador
+    <div className="bg-background dark min-h-screen w-full">
+      <div className="mx-auto max-w-6xl p-4 md:p-6">
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/">
+              <Button
+                variant="outline"
+                className="bg-card text-muted-foreground border-border hover:text-foreground hover:bg-accent flex h-auto shrink-0 items-center justify-center gap-2 rounded-lg px-3 py-2"
+              >
+                <ArrowLeft size={16} />
+                <span className="text-sm font-normal">Voltar</span>
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Criar Novo Jogador</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="time">Time</Label>
-                  <Select value={idTime} onValueChange={setIdTime}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {times?.map((time) => (
-                        <SelectItem key={time.id} value={time.id.toString()}>
-                          {time.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="nome">Nome</Label>
-                  <Input
-                    id="nome"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    placeholder="Ex: João Silva"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="numero">Número</Label>
-                  <Input
-                    id="numero"
-                    type="number"
-                    value={numero}
-                    onChange={(e) => setNumero(e.target.value)}
-                    placeholder="Ex: 10"
-                    min="1"
-                    max="99"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="posicao">Posição</Label>
-                  <Select value={posicao} onValueChange={setPosicao}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {POSICOES.map((pos) => (
-                        <SelectItem key={pos} value={pos}>
-                          {pos}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="idade">Idade (opcional)</Label>
-                  <Input
-                    id="idade"
-                    type="number"
-                    value={idade}
-                    onChange={(e) => setIdade(e.target.value)}
-                    placeholder="Ex: 25"
-                    min="1"
-                    max="50"
-                  />
-                </div>
-                <Button
-                  onClick={handleCreate}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  disabled={isCreating}
-                >
-                  {isCreating ? "Criando..." : "Criar Jogador"}
-                </Button>
+            </Link>
+            <div className="flex items-center gap-2">
+              <div className="bg-primary/20 border-primary/30 shrink-0 rounded-lg border p-2">
+                <Shield size={18} className="text-primary" />
               </div>
-            </DialogContent>
-          </Dialog>
+              <div>
+                <h1
+                  className="text-foreground mb-0 leading-tight"
+                  style={{ fontSize: "clamp(1rem, 4vw, 1.4rem)" }}
+                >
+                  Gerenciamento de Jogadores
+                </h1>
+                <p className="text-muted-foreground mb-0 text-[0.78rem]">
+                  Cadastre e organize seus jogadores
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className="bg-secondary text-muted-foreground border-border hover:text-foreground hover:border-accent hover:bg-secondary/80 flex h-auto flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 md:flex-none"
+            >
+              <Swords size={15} />
+              <span className="text-sm font-normal">Partidas</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="bg-primary/20 text-primary border-primary/30 hover:bg-primary hover:text-primary-foreground flex h-auto flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 md:flex-none"
+            >
+              <ClipboardList size={15} />
+              <span className="text-sm font-normal">Registros</span>
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                if (!selectedTeam) {
+                  toast.error("Selecione um time primeiro");
+                  return;
+                }
+                setEditingPlayer(null);
+                setFormData({
+                  numero: "",
+                  nome: "",
+                  posicao: "Atacante",
+                  idade: "",
+                });
+                setShowForm(true);
+              }}
+              className="flex h-auto flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 md:flex-none"
+              style={{ backgroundColor: C.green, color: "#000" }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+            >
+              <Plus size={15} />
+              <span className="text-sm font-normal">Novo Jogador</span>
+            </Button>
+          </div>
         </div>
 
-        {/* Seleção de Time */}
-        <div className="mb-8 max-w-xs">
-          <Label htmlFor="timeSelect">
-            Selecione um time para visualizar jogadores
-          </Label>
-          <Select value={idTime} onValueChange={setIdTime}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione um time" />
-            </SelectTrigger>
-            <SelectContent>
-              {times?.map((time) => (
-                <SelectItem key={time.id} value={time.id.toString()}>
-                  {time.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {!idTime ? (
-          <Card className="py-12 text-center">
-            <CardContent>
-              <p className="text-slate-600">
-                Selecione um time para visualizar seus jogadores
-              </p>
-            </CardContent>
-          </Card>
-        ) : isLoadingJogadores ? (
-          <Card className="py-12 text-center">
-            <CardContent>
-              <p className="text-slate-600">Carregando jogadores...</p>
-            </CardContent>
-          </Card>
-        ) : jogadores.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
-            {jogadores.map((jogador) => (
-              <Card key={jogador.id} className="transition hover:shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-lg">
-                    #{jogador.numero} - {jogador.nome}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm text-slate-600">
-                    <strong>Posição:</strong> {jogador.posicao}
-                  </p>
-                  {jogador.idade && (
-                    <p className="text-sm text-slate-600">
-                      <strong>Idade:</strong> {jogador.idade} anos
-                    </p>
-                  )}
-                  <div className="flex gap-2 pt-4">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Edit2 className="mr-1 h-4 w-4" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(jogador.id)}
-                      disabled={deletingId === jogador.id}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+        {/* Filters */}
+        <div className="mb-5 flex flex-col gap-3 md:mb-6 md:flex-row md:items-end md:gap-4">
+          {/* Search */}
+          <SearchFilter
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+          {/* Stats summary */}
+          <div
+            className="flex shrink-0 items-center gap-0 overflow-hidden rounded-lg"
+            style={{ border: `1px solid ${C.border}` }}
+          >
+            {[
+              { label: "Jogadores", value: filteredPlayers.length },
+              {
+                label: "Gols",
+                value: 0,
+              },
+              {
+                label: "Média",
+                value: "—",
+              },
+            ].map((stat, i) => (
+              <div
+                key={stat.label}
+                className="flex-1 px-4 py-2 text-center"
+                style={{
+                  backgroundColor: C.card,
+                  borderLeft: i > 0 ? `1px solid ${C.border}` : "none",
+                }}
+              >
+                <p
+                  className="mb-0"
+                  style={{ color: C.green, fontSize: "1rem" }}
+                >
+                  {stat.value}
+                </p>
+                <p
+                  className="mb-0"
+                  style={{ color: C.dim, fontSize: "0.65rem" }}
+                >
+                  {stat.label}
+                </p>
+              </div>
             ))}
           </div>
-        ) : (
-          <Card className="py-12 text-center">
-            <CardContent>
-              <p className="mb-4 text-slate-600">
-                Nenhum jogador cadastrado para este time
-              </p>
-              <Button
-                className="bg-emerald-600 hover:bg-emerald-700"
-                onClick={() => setIsOpen(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Primeiro Jogador
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        </div>
+
+        {/* Players — cards on mobile, table on desktop */}
+        <>
+          {/* Mobile: card list */}
+          <div className="flex flex-col gap-3 md:hidden">
+            {isLoadingJogadores ? (
+              <div className="py-16 text-center" style={{ color: C.muted }}>
+                <p>Carregando jogadores...</p>
+              </div>
+            ) : filteredPlayers.length === 0 ? (
+              <div className="py-16 text-center" style={{ color: C.muted }}>
+                <Users size={40} className="mx-auto mb-3 opacity-30" />
+                <p>Nenhum jogador encontrado</p>
+              </div>
+            ) : (
+              filteredPlayers
+                .sort((a, b) => a.numero - b.numero)
+                .map((player) => {
+                  const posStyle = positionColors[player.posicao] ?? {
+                    bg: C.card,
+                    text: C.text,
+                    border: C.border,
+                  };
+                  return (
+                    <div
+                      key={player.id}
+                      className="rounded-xl p-4"
+                      style={{
+                        backgroundColor: C.card,
+                        border: `1px solid ${C.border}`,
+                      }}
+                    >
+                      <div className="mb-3 flex items-center gap-3">
+                        <span
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm"
+                          style={{
+                            backgroundColor: C.greenDim,
+                            color: C.green,
+                            border: `1px solid ${C.greenBorder}`,
+                          }}
+                        >
+                          {player.numero}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <Button
+                            variant="ghost"
+                            className="h-auto w-full justify-start p-0 text-left hover:bg-transparent"
+                          >
+                            <p
+                              className="mb-0 truncate font-normal text-white"
+                              style={{ fontSize: "0.95rem" }}
+                            >
+                              {player.nome}
+                            </p>
+                          </Button>
+                          <p
+                            className="mb-0 font-normal"
+                            style={{ color: C.muted, fontSize: "0.78rem" }}
+                          >
+                            {player.idade ? `${player.idade} anos` : "N/I"}
+                          </p>
+                        </div>
+                        <span
+                          className="shrink-0 rounded-full px-2 py-1 text-xs"
+                          style={{
+                            backgroundColor: posStyle.bg,
+                            color: posStyle.text,
+                            border: `1px solid ${posStyle.border}`,
+                          }}
+                        >
+                          {player.posicao}
+                        </span>
+                      </div>
+
+                      <div className="mb-3 grid grid-cols-3 gap-2">
+                        {[
+                          {
+                            label: "Nota",
+                            value: "—",
+                            highlight: false,
+                          },
+                          { label: "Gols", value: 0 },
+                          { label: "Assist.", value: 0 },
+                        ].map((s) => (
+                          <div
+                            key={s.label}
+                            className="rounded-lg p-2 text-center"
+                            style={{ backgroundColor: C.cardHeader }}
+                          >
+                            <p
+                              className="mb-0 font-normal"
+                              style={{
+                                color: (s as any).highlight ? C.green : C.text,
+                                fontSize: "1rem",
+                              }}
+                            >
+                              {s.value}
+                            </p>
+                            <p
+                              className="mb-0 font-normal"
+                              style={{ color: C.dim, fontSize: "0.65rem" }}
+                            >
+                              {s.label}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          className="flex h-auto flex-1 items-center justify-center gap-1 rounded-lg py-2 text-xs font-normal"
+                          style={{
+                            backgroundColor: C.greenDim,
+                            color: C.green,
+                            border: `1px solid ${C.greenBorder}`,
+                          }}
+                        >
+                          <ClipboardList size={13} />
+                          Registros
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleEdit(player)}
+                          className="flex h-auto items-center justify-center rounded-lg px-3 py-2 text-xs font-normal"
+                          style={{
+                            backgroundColor: "#1a2540",
+                            color: "#60a5fa",
+                            border: "1px solid #1a3560",
+                          }}
+                        >
+                          <Pencil size={13} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => handleDelete(player.id)}
+                          className="flex h-auto items-center justify-center rounded-lg px-3 py-2 text-xs font-normal"
+                          style={{
+                            backgroundColor: "#2e1a1a",
+                            color: "#f87171",
+                            border: "1px solid #4a1a1a",
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+
+          {/* Desktop: table */}
+          <div
+            className="hidden overflow-hidden rounded-xl md:block"
+            style={{ border: `1px solid ${C.border}` }}
+          >
+            <Table>
+              <TableHeader>
+                <TableRow
+                  style={{
+                    backgroundColor: C.cardHeader,
+                    borderBottom: `1px solid ${C.border}`,
+                  }}
+                >
+                  <TableHead
+                    style={{ color: C.dim }}
+                    className="w-[60px] text-xs tracking-wide uppercase"
+                  >
+                    Nº
+                  </TableHead>
+                  <TableHead
+                    style={{ color: C.dim }}
+                    className="text-xs tracking-wide uppercase"
+                  >
+                    Jogador
+                  </TableHead>
+                  <TableHead
+                    style={{ color: C.dim }}
+                    className="w-[140px] text-xs tracking-wide uppercase"
+                  >
+                    Posição
+                  </TableHead>
+                  <TableHead
+                    style={{ color: C.dim }}
+                    className="w-[80px] text-xs tracking-wide uppercase"
+                  >
+                    Idade
+                  </TableHead>
+                  <TableHead
+                    style={{ color: C.dim }}
+                    className="w-[80px] text-xs tracking-wide uppercase"
+                  >
+                    Nota
+                  </TableHead>
+                  <TableHead
+                    style={{ color: C.dim }}
+                    className="w-[80px] text-xs tracking-wide uppercase"
+                  >
+                    Gols
+                  </TableHead>
+                  <TableHead
+                    style={{ color: C.dim }}
+                    className="w-[80px] text-xs tracking-wide uppercase"
+                  >
+                    Assist.
+                  </TableHead>
+                  <TableHead
+                    style={{ color: C.dim }}
+                    className="w-[120px] text-xs tracking-wide uppercase"
+                  >
+                    Ações
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {isLoadingJogadores ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="py-16 text-center"
+                      style={{ color: C.muted }}
+                    >
+                      Carregando jogadores...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredPlayers.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="py-16 text-center"
+                      style={{ color: C.muted }}
+                    >
+                      <Users size={40} className="mx-auto mb-3 opacity-30" />
+                      Nenhum jogador encontrado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredPlayers
+                    .sort((a, b) => a.numero - b.numero)
+                    .map((player) => {
+                      const posStyle = positionColors[player.posicao] ?? {
+                        bg: C.card,
+                        text: C.text,
+                        border: C.border,
+                      };
+                      return (
+                        <TableRow
+                          key={player.id}
+                          style={{
+                            borderBottom: `1px solid ${C.border}`,
+                            backgroundColor: "transparent",
+                          }}
+                          className="transition-colors hover:bg-[#212b42]"
+                        >
+                          <TableCell>
+                            <span
+                              className="flex h-9 w-9 items-center justify-center rounded-full text-sm"
+                              style={{
+                                backgroundColor: C.greenDim,
+                                color: C.green,
+                                border: `1px solid ${C.greenBorder}`,
+                              }}
+                            >
+                              {player.numero}
+                            </span>
+                          </TableCell>
+
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              className="group h-auto justify-start p-0 text-left font-normal hover:bg-transparent"
+                            >
+                              <span
+                                className="text-white group-hover:underline"
+                                style={{ fontSize: "0.95rem" }}
+                              >
+                                {player.nome}
+                              </span>
+                            </Button>
+                          </TableCell>
+
+                          <TableCell>
+                            <span
+                              className="rounded-full px-2 py-1 text-xs"
+                              style={{
+                                backgroundColor: posStyle.bg,
+                                color: posStyle.text,
+                                border: `1px solid ${posStyle.border}`,
+                              }}
+                            >
+                              {player.posicao}
+                            </span>
+                          </TableCell>
+
+                          <TableCell
+                            style={{ color: C.muted, fontSize: "0.9rem" }}
+                          >
+                            {player.idade ? `${player.idade} anos` : "—"}
+                          </TableCell>
+
+                          <TableCell
+                            style={{ color: C.muted, fontSize: "0.95rem" }}
+                          >
+                            —
+                          </TableCell>
+                          <TableCell
+                            style={{ color: C.text, fontSize: "0.9rem" }}
+                          >
+                            0
+                          </TableCell>
+                          <TableCell
+                            style={{ color: C.text, fontSize: "0.9rem" }}
+                          >
+                            0
+                          </TableCell>
+
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                className="h-auto min-w-0 rounded-lg px-2 py-1 text-xs font-normal"
+                                style={{
+                                  backgroundColor: C.greenDim,
+                                  color: C.green,
+                                  border: `1px solid ${C.greenBorder}`,
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    C.green;
+                                  e.currentTarget.style.color = "#000";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    C.greenDim;
+                                  e.currentTarget.style.color = C.green;
+                                }}
+                                title="Ver registros"
+                              >
+                                <ClipboardList size={12} />
+                              </Button>
+
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleEdit(player)}
+                                className="h-auto min-w-0 rounded-lg px-2 py-1 text-xs font-normal"
+                                style={{
+                                  backgroundColor: "#1a2540",
+                                  color: "#60a5fa",
+                                  border: "1px solid #1a3560",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "#2563eb";
+                                  e.currentTarget.style.color = "#fff";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "#1a2540";
+                                  e.currentTarget.style.color = "#60a5fa";
+                                }}
+                                title="Editar"
+                              >
+                                <Pencil size={12} />
+                              </Button>
+
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleDelete(player.id)}
+                                className="h-auto min-w-0 rounded-lg px-2 py-1 text-xs font-normal"
+                                style={{
+                                  backgroundColor: "#2e1a1a",
+                                  color: "#f87171",
+                                  border: "1px solid #4a1a1a",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "#dc2626";
+                                  e.currentTarget.style.color = "#fff";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor =
+                                    "#2e1a1a";
+                                  e.currentTarget.style.color = "#f87171";
+                                }}
+                                title="Excluir"
+                              >
+                                <Trash2 size={12} />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+
+        {/* Position legend */}
       </div>
+
+      {/* Modal */}
+      {showForm && (
+        <Dialog open={showForm} onOpenChange={setShowForm}>
+          <DialogContent
+            className="w-full max-w-md rounded-t-2xl p-6 md:rounded-2xl"
+            style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}
+          >
+            <DialogHeader>
+              <DialogTitle className="text-white">
+                {editingPlayer ? "Editar Jogador" : "Novo Jogador"}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="mt-2 flex flex-col gap-4">
+              {[
+                {
+                  label: "Número da camisa",
+                  key: "number",
+                  type: "number",
+                  placeholder: "Ex: 10",
+                },
+                {
+                  label: "Nome completo",
+                  key: "name",
+                  type: "text",
+                  placeholder: "Ex: João Silva",
+                },
+                {
+                  label: "Idade",
+                  key: "age",
+                  type: "number",
+                  placeholder: "Ex: 17",
+                },
+              ].map((field) => (
+                <div key={field.key} className="flex flex-col gap-1">
+                  <Label style={{ color: C.muted }} className="text-xs">
+                    {field.label}
+                  </Label>
+                  <Input
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    value={(formData as any)[field.key]}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        [field.key]: e.target.value,
+                      }))
+                    }
+                    className="rounded-lg border px-4 py-2 outline-none focus-visible:ring-0"
+                    style={{
+                      backgroundColor: C.cardHeader,
+                      color: C.text,
+                      borderColor: C.borderLight,
+                    }}
+                  />
+                </div>
+              ))}
+
+              <div className="flex flex-col gap-1">
+                <Label style={{ color: C.muted }} className="text-xs">
+                  Posição
+                </Label>
+                <Select
+                  value={formData.posicao}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, posicao: value }))
+                  }
+                >
+                  <SelectTrigger
+                    className="rounded-lg border px-4 py-2 outline-none focus:ring-0"
+                    style={{
+                      backgroundColor: C.cardHeader,
+                      color: C.text,
+                      borderColor: C.borderLight,
+                    }}
+                  >
+                    <SelectValue placeholder="Selecione a posição" />
+                  </SelectTrigger>
+                  <SelectContent
+                    style={{ backgroundColor: C.card, borderColor: C.border }}
+                  >
+                    {[
+                      "Goleiro",
+                      "Zagueiro",
+                      "Lateral",
+                      "Volante",
+                      "Meia",
+                      "Atacante",
+                    ].map((p) => (
+                      <SelectItem
+                        key={p}
+                        value={p}
+                        className="cursor-pointer"
+                        style={{ color: C.text }}
+                      >
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <DialogFooter className="mt-6 flex gap-3 sm:flex-row">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-lg py-2 text-sm"
+                style={{
+                  backgroundColor: C.cardHeader,
+                  color: C.muted,
+                  borderColor: C.border,
+                }}
+                onClick={() => setShowForm(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="flex-1 rounded-lg py-2 text-sm font-semibold opacity-100 transition-opacity hover:opacity-85"
+                style={{ backgroundColor: C.green, color: "#000" }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                onClick={handleSave}
+              >
+                {editingPlayer ? "Salvar alterações" : "Adicionar jogador"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
