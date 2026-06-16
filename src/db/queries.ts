@@ -175,8 +175,8 @@ export async function getDashboardByPartida(
     countEventosByTipo(eventosPartida, "Finalização Errada");
   const desarmes = countEventosByTipo(eventosPartida, "Desarme");
 
-  const placarTimeA = partida.placarTimeA ?? 0;
-  const placarTimeB = partida.placarTimeB ?? 0;
+  const placarTimeA = partida.placarTime ?? 0;
+  const placarTimeB = partida.placarTimeAdversario ?? 0;
   const vitorias = placarTimeA > placarTimeB ? 1 : 0;
   const empates = placarTimeA === placarTimeB ? 1 : 0;
   const derrotas = placarTimeA < placarTimeB ? 1 : 0;
