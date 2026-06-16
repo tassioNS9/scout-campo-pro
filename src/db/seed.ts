@@ -1,5 +1,5 @@
-import { db } from "@/db"; // ajuste o caminho conforme seu projeto
-import { estatisticas, eventos, jogadores, partidas, times } from "@/db/schema"; // ajuste o caminho conforme seu projeto
+import { db } from "@/db";
+import { estatisticas, eventos, jogadores, partidas, times } from "@/db/schema";
 
 async function seed() {
   console.log("🌱 Iniciando seed...");
@@ -309,98 +309,111 @@ async function seed() {
 
   console.log(`✅ ${jogadoresInseridos.length} jogadores inseridos`);
 
-  // Helpers para pegar jogadores por time
   const jA = jogadoresInseridos.filter((j) => j.idTime === timeA.id);
   const jB = jogadoresInseridos.filter((j) => j.idTime === timeB.id);
   const jS17 = jogadoresInseridos.filter((j) => j.idTime === timeSub17.id);
 
   // ----------------------------------------------------------------
   // 3. PARTIDAS
+  // Mudanças do schema antigo → novo:
+  //   time (string)        → idTime (FK)
+  //   timeAdversario       → nomeTimeAdversario
+  //   placarTimeA          → placarTime
+  //   placarTimeB          → placarTimeAdversario
+  //   formacao removida    (não existe mais no schema)
+  //   casaOuFora adicionado
   // ----------------------------------------------------------------
   const partidasData = await db
     .insert(partidas)
     .values([
       {
-        time: timeA.nome,
-        timeAdversario: timeB.nome,
+        // Partida 1 — Vitória 2x1
+        idTime: timeA.id,
+        nomeTimeAdversario: timeB.nome,
         data: new Date("2025-03-15T15:00:00"),
         campeonato: "Campeonato Baiano 2025",
         categoria: "Profissional",
-        formacao: "4-3-3",
-        placarTimeA: 2,
-        placarTimeB: 1,
+        casaOuFora: "casa",
+        placarTime: 2,
+        placarTimeAdversario: 1,
         status: "finalizada",
         resultado: "Vitória",
       },
       {
-        time: timeA.nome,
-        timeAdversario: "Vitória FC",
+        // Partida 2 — Empate 0x0
+        idTime: timeA.id,
+        nomeTimeAdversario: "Vitória FC",
         data: new Date("2025-03-22T16:00:00"),
         campeonato: "Campeonato Baiano 2025",
         categoria: "Profissional",
-        formacao: "4-4-2",
-        placarTimeA: 0,
-        placarTimeB: 0,
+        casaOuFora: "fora",
+        placarTime: 0,
+        placarTimeAdversario: 0,
         status: "finalizada",
         resultado: "Empate",
       },
       {
-        time: timeA.nome,
-        timeAdversario: timeB.nome,
+        // Partida 3 — Derrota 1x3
+        idTime: timeA.id,
+        nomeTimeAdversario: timeB.nome,
         data: new Date("2025-04-05T15:00:00"),
         campeonato: "Copa do Nordeste 2025",
         categoria: "Profissional",
-        formacao: "4-3-3",
-        placarTimeA: 1,
-        placarTimeB: 3,
+        casaOuFora: "fora",
+        placarTime: 1,
+        placarTimeAdversario: 3,
         status: "finalizada",
         resultado: "Derrota",
       },
       {
-        time: timeSub17.nome,
-        timeAdversario: "Atlético Sub-17",
+        // Partida 4 — Sub-17 Vitória 3x0
+        idTime: timeSub17.id,
+        nomeTimeAdversario: "Atlético Sub-17",
         data: new Date("2025-04-10T10:00:00"),
         campeonato: "Torneio Regional Sub-17",
         categoria: "Sub-17",
-        formacao: "4-3-3",
-        placarTimeA: 3,
-        placarTimeB: 0,
+        casaOuFora: "casa",
+        placarTime: 3,
+        placarTimeAdversario: 0,
         status: "finalizada",
         resultado: "Vitória",
       },
       {
-        time: timeSub15.nome,
-        timeAdversario: "Cruzeiro Sub-15",
+        // Partida 5 — Sub-15 Derrota 1x2
+        idTime: timeSub15.id,
+        nomeTimeAdversario: "Cruzeiro Sub-15",
         data: new Date("2025-04-12T09:00:00"),
         campeonato: "Torneio Regional Sub-15",
         categoria: "Sub-15",
-        formacao: "4-4-2",
-        placarTimeA: 1,
-        placarTimeB: 2,
+        casaOuFora: "fora",
+        placarTime: 1,
+        placarTimeAdversario: 2,
         status: "finalizada",
         resultado: "Derrota",
       },
       {
-        time: timeA.nome,
-        timeAdversario: "Bahia FC",
+        // Partida 6 — Em andamento
+        idTime: timeA.id,
+        nomeTimeAdversario: "Bahia FC",
         data: new Date("2025-05-01T19:00:00"),
         campeonato: "Campeonato Baiano 2025",
         categoria: "Profissional",
-        formacao: "4-3-3",
-        placarTimeA: 0,
-        placarTimeB: 0,
+        casaOuFora: "casa",
+        placarTime: 0,
+        placarTimeAdversario: 0,
         status: "em_andamento",
         resultado: "Sem Resultado",
       },
       {
-        time: timeA.nome,
-        timeAdversario: "Santos FC",
+        // Partida 7 — Planejada
+        idTime: timeA.id,
+        nomeTimeAdversario: "Santos FC",
         data: new Date("2025-05-10T16:00:00"),
         campeonato: "Amistoso",
         categoria: "Profissional",
-        formacao: "4-3-3",
-        placarTimeA: 0,
-        placarTimeB: 0,
+        casaOuFora: "fora",
+        placarTime: 0,
+        placarTimeAdversario: 0,
         status: "planejada",
         resultado: "Sem Resultado",
       },
@@ -409,13 +422,12 @@ async function seed() {
 
   console.log(`✅ ${partidasData.length} partidas inseridas`);
 
-  const [p1, p2, p3, p4] = partidasData;
+  const [p1, p2, , p4] = partidasData;
 
   // ----------------------------------------------------------------
   // 4. EVENTOS — Partida 1 (Vitória 2x1)
   // ----------------------------------------------------------------
   const eventosPartida1 = [
-    // Gol de Gabriel Nunes (jA[9]) no 1T
     {
       idPartida: p1.id,
       idJogador: jA[9].id,
@@ -432,7 +444,6 @@ async function seed() {
       tempo: "1T",
       zona: "Ataque",
     },
-    // Assistência de Mateus Alves (jA[7])
     {
       idPartida: p1.id,
       idJogador: jA[7].id,
@@ -441,7 +452,6 @@ async function seed() {
       tempo: "1T",
       zona: "Ataque",
     },
-    // Gol de Vinícius (jA[10]) no 2T
     {
       idPartida: p1.id,
       idJogador: jA[10].id,
@@ -458,7 +468,6 @@ async function seed() {
       tempo: "2T",
       zona: "Ataque",
     },
-    // Passe decisivo de Anderson Rocha (jA[8])
     {
       idPartida: p1.id,
       idJogador: jA[8].id,
@@ -467,7 +476,6 @@ async function seed() {
       tempo: "2T",
       zona: "Meio",
     },
-    // Gol adversário (Henrique, jB[9])
     {
       idPartida: p1.id,
       idJogador: jB[9].id,
@@ -476,7 +484,6 @@ async function seed() {
       tempo: "2T",
       zona: "Ataque",
     },
-    // Desarmes e recuperações
     {
       idPartida: p1.id,
       idJogador: jA[5].id,
@@ -501,7 +508,6 @@ async function seed() {
       tempo: "1T",
       zona: "Defesa",
     },
-    // Finalizações erradas
     {
       idPartida: p1.id,
       idJogador: jA[9].id,
@@ -518,7 +524,6 @@ async function seed() {
       tempo: "2T",
       zona: "Ataque",
     },
-    // Dribles
     {
       idPartida: p1.id,
       idJogador: jA[7].id,
@@ -535,7 +540,6 @@ async function seed() {
       tempo: "2T",
       zona: "Meio",
     },
-    // Falta
     {
       idPartida: p1.id,
       idJogador: jA[6].id,
@@ -696,7 +700,6 @@ async function seed() {
   // 7. ESTATÍSTICAS — Partida 1
   // ----------------------------------------------------------------
   await db.insert(estatisticas).values([
-    // Gabriel Nunes — destaque da partida
     {
       idJogador: jA[9].id,
       idPartida: p1.id,
@@ -708,7 +711,6 @@ async function seed() {
       perdaBola: 1,
       nota: "8.5",
     },
-    // Vinícius Carvalho
     {
       idJogador: jA[10].id,
       idPartida: p1.id,
@@ -719,7 +721,6 @@ async function seed() {
       perdaBola: 2,
       nota: "7.5",
     },
-    // Mateus Alves — meia criativo
     {
       idJogador: jA[7].id,
       idPartida: p1.id,
@@ -729,7 +730,6 @@ async function seed() {
       dribleErrado: 1,
       nota: "8.0",
     },
-    // Anderson Rocha
     {
       idJogador: jA[8].id,
       idPartida: p1.id,
@@ -737,7 +737,6 @@ async function seed() {
       dribleErrado: 1,
       nota: "7.0",
     },
-    // Felipe Santos — volante defensivo
     {
       idJogador: jA[5].id,
       idPartida: p1.id,
@@ -747,7 +746,6 @@ async function seed() {
       faltas: 1,
       nota: "7.5",
     },
-    // Carlos Lima — lateral
     {
       idJogador: jA[3].id,
       idPartida: p1.id,
@@ -756,7 +754,6 @@ async function seed() {
       faltas: 1,
       nota: "6.5",
     },
-    // Rafael Souza — zagueiro
     {
       idJogador: jA[1].id,
       idPartida: p1.id,
@@ -764,13 +761,11 @@ async function seed() {
       interceptacoes: 2,
       nota: "7.0",
     },
-    // Goleiro Lucas Ferreira
     {
       idJogador: jA[0].id,
       idPartida: p1.id,
       nota: "7.0",
     },
-    // Adversário — Henrique Teixeira (gol)
     {
       idJogador: jB[9].id,
       idPartida: p1.id,
@@ -800,7 +795,6 @@ async function seed() {
     {
       idJogador: jA[7].id,
       idPartida: p2.id,
-      assistencias: 0,
       dribleCerto: 2,
       perdaBola: 1,
       nota: "6.5",
@@ -823,7 +817,7 @@ async function seed() {
   ]);
 
   // ----------------------------------------------------------------
-  // 9. ESTATÍSTICAS — Partida Sub-17
+  // 9. ESTATÍSTICAS — Partida 4 Sub-17
   // ----------------------------------------------------------------
   await db.insert(estatisticas).values([
     {
