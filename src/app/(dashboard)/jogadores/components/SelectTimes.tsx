@@ -1,9 +1,17 @@
 "use client";
 
+import { SelectTrigger } from "@radix-ui/react-select";
 import { ChevronDown, Users } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { C } from "@/constants/Colors";
 import type { Time } from "@/db/schema";
 
@@ -67,6 +75,21 @@ const SelectTimes = () => {
           ))}
         </div>
       )}
+
+      <Select>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Theme" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {times.map((t) => (
+              <SelectItem key={t.id} value={t.nome}>
+                {t.nome}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </div>
   );
 };
