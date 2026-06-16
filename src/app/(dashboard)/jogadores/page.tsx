@@ -21,26 +21,14 @@ import { listTimes } from "@/app/actions/list-times";
 import { updateJogador } from "@/app/actions/update-jogador";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { Jogador, Time } from "@/db/schema";
-
-import SearchFilter from "./components/SearchFilter";
-import { C } from "@/constants/Colors";
-import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -48,6 +36,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { C } from "@/constants/Colors";
+import type { Jogador, Time } from "@/db/schema";
+
+import SearchFilter from "./components/SearchFilter";
+import SelectTimes from "./components/SelectTimes";
 
 const positionStyles: Record<string, string> = {
   Goleiro: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -97,18 +98,25 @@ export default function JogadoresPage() {
   });
 
   useEffect(() => {
-    let isMounted = true;
-    listTimes().then((data) => {
-      if (isMounted) {
-        setTimes(data);
-        if (data.length > 0) {
-          setSelectedTeam(data[0]);
-        }
+    async function fetchTimes() {
+      try {
+        setIsLoadingJogadores(true);
+        await listTimes().then((data) => {
+          setTimes(data);
+          if (data.length > 0) {
+            setSelectedTeam(data[0]);
+          } else {
+            setJogadores([]);
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        toast.error("Erro ao carregar times");
+      } finally {
+        setIsLoadingJogadores(false);
       }
-    });
-    return () => {
-      isMounted = false;
-    };
+    }
+    fetchTimes();
   }, []);
 
   useEffect(() => {
@@ -279,6 +287,8 @@ export default function JogadoresPage() {
 
         {/* Filters */}
         <div className="mb-5 flex flex-col gap-3 md:mb-6 md:flex-row md:items-end md:gap-4">
+          <SelectTimes />
+
           {/* Search */}
           <SearchFilter
             searchQuery={searchQuery}
