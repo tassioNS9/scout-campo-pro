@@ -1,13 +1,13 @@
-import { useState } from "react";
 import {
+  Activity,
   ArrowLeft,
   Bookmark,
-  Star,
   Shield,
-  Zap,
+  Star,
   Target,
-  Activity,
+  Zap,
 } from "lucide-react";
+import { useState } from "react";
 
 const C = {
   bg: "#13192b",

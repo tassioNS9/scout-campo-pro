@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import {
   ArrowLeft,
-  Plus,
-  Pencil,
-  Trash2,
   ChevronDown,
   ClipboardList,
-  Users,
+  Pencil,
+  Plus,
   Search,
   Shield,
+  Trash2,
+  Users,
 } from "lucide-react";
+import { useState } from "react";
+
 import { PlayerRecords } from "./components/PlayerRecords";
 
 const C = {
