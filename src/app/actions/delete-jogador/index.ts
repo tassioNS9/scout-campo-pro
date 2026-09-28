@@ -1,8 +1,11 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+import { refresh } from "next/cache";
 import { headers } from "next/headers";
 
-import { deleteJogador as deleteJogadorQuery } from "@/db/queries";
+import { db } from "@/db";
+import { jogadoresTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 export const deleteJogador = async (id: number) => {
@@ -12,5 +15,6 @@ export const deleteJogador = async (id: number) => {
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
-  return await deleteJogadorQuery(id);
+  await db.delete(jogadoresTable).where(eq(jogadoresTable.id, id));
+  refresh();
 };
