@@ -1,7 +1,20 @@
 "use server";
+import { eq, sql } from "drizzle-orm";
 
-import { getDashboardByPartida as getDashboardByPartidaQuery } from "@/db/queries";
+import { db } from "@/db";
+import { eventosTable } from "@/db/schema";
 
-export const getDashboardByPartida = async (idPartida: number) => {
-  return await getDashboardByPartidaQuery(idPartida);
-};
+export async function getDashboardByPartida(partidaId: number) {
+  const estatisticasCalculadas = await db
+    .select({
+      gols: sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'Gol')`,
+      finalizacoes: sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'FinalizacaoCerta' or ${eventosTable.tipoEvento} = 'FinalizacaoErrada')`,
+      desarmes: sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'Desarme')`,
+      assistencias: sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'Assistencia')`,
+      totalEventos: sql<number>`count(*)`,
+      // ...
+    })
+    .from(eventosTable)
+    .where(eq(eventosTable.idPartida, partidaId));
+  return estatisticasCalculadas[0];
+}
