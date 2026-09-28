@@ -11,14 +11,10 @@ type UpdateEstatisticaInput = {
   finalizacaoCerta?: InsertEstatistica["finalizacaoCerta"];
   finalizacaoErrada?: InsertEstatistica["finalizacaoErrada"];
   assistencias?: InsertEstatistica["assistencias"];
-  dribleCerto?: InsertEstatistica["dribleCerto"];
-  dribleErrado?: InsertEstatistica["dribleErrado"];
-  cruzamentos?: InsertEstatistica["cruzamentos"];
   desarmes?: InsertEstatistica["desarmes"];
   interceptacoes?: InsertEstatistica["interceptacoes"];
-  ganhoBola?: InsertEstatistica["ganhoBola"];
-  perdaBola?: InsertEstatistica["perdaBola"];
-  faltas?: InsertEstatistica["faltas"];
+  faltasCometidas?: InsertEstatistica["faltasCometidas"];
+  faltasSofridas?: InsertEstatistica["faltasSofridas"];
   gols?: InsertEstatistica["gols"];
   nota?: InsertEstatistica["nota"];
 };
