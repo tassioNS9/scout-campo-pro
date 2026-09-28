@@ -1,13 +1,14 @@
 import {
   boolean,
   char,
-  decimal,
   integer,
   pgEnum,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
+  unique,
   varchar,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm/relations";
@@ -67,9 +68,8 @@ export const verification = pgTable("verification", {
 
 // Enums
 export const categoriaEnum = pgEnum("categoria", [
-  "Sub-13",
-  "Sub-15",
   "Sub-17",
+  "Sub-20",
   "Profissional",
 ]);
 
@@ -89,51 +89,53 @@ export const statusPartidaEnum = pgEnum("status_partida", [
 ]);
 
 export const resultadoEnum = pgEnum("resultado", [
-  "Vitória",
+  "Vitoria",
   "Derrota",
   "Empate",
-  "Sem Resultado",
+  "Sem_Resultado",
 ]);
 
 export const casaOuForaEnum = pgEnum("casa_ou_fora", ["casa", "fora"]);
 
 export const tipoEventoEnum = pgEnum("tipo_evento", [
-  "Finalização Certa",
-  "Finalização Errada",
-  "Assistência",
-  "Passe Decisivo",
-  "Drible Certo",
-  "Drible Errado",
-  "Cruzamento",
+  "Assistencia",
   "Desarme",
-  "Interceptação",
-  "Ganho de Bola",
-  "Perda de Bola",
-  "Falta",
-  "Duelo Ganho",
-  "Duelo Perdido",
+  "FaltaCometida",
+  "FaltaSofrida",
   "Gol",
+  "GolContra",
+  "cartaoAmarelo",
+  "cartaoVermelho",
+  "CometerPenalti",
+  "SofrerPenalti",
 ]);
-
-export const zonaEnum = pgEnum("zona", ["Defesa", "Meio", "Ataque"]);
 
 export const tempoEnum = pgEnum("tempo_partida", ["1T", "2T"]);
 
 // Times table
-export const times = pgTable("times", {
+export const timesTable = pgTable("times", {
   id: serial("id").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
   nome: varchar("nome", { length: 100 }).notNull().unique(),
   categoria: categoriaEnum("categoria").notNull(),
-  cidade: varchar("cidade", { length: 100 }),
-  estado: char("estado", { length: 2 }),
+  cidade: varchar("cidade", { length: 100 }).notNull(),
+  estado: char("estado", { length: 2 }).notNull(),
+  escudoUrl: text("escudoUrl"), // <- novo campo
+  escudoPath: text("escudoPath"), // <- caminho no bucket, útil pra deletar depois
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
-export type Time = typeof times.$inferSelect;
-export type InsertTime = typeof times.$inferInsert;
+export type Time = typeof timesTable.$inferSelect;
+export type InsertTime = typeof timesTable.$inferInsert;
+
+export const userTableRelations = relations(user, ({ many }) => ({
+  times: many(timesTable),
+}));
 
 // Jogadores table
-export const jogadores = pgTable("jogadores", {
+export const jogadoresTable = pgTable("jogadores", {
   id: serial("id").primaryKey(),
   nome: varchar("nome", { length: 100 }).notNull(),
   numero: integer("numero").notNull(),
@@ -141,23 +143,27 @@ export const jogadores = pgTable("jogadores", {
   idade: integer("idade").notNull(),
   idTime: integer("idTime")
     .notNull()
-    .references(() => times.id, { onDelete: "cascade" }),
+    .references(() => timesTable.id, { onDelete: "cascade" }),
+  fotoUrl: text("fotoUrl"), // <- novo campo
+  fotoPath: text("fotoPath"), // <- caminho no bucket, útil pra deletar depois
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
-export type Jogador = typeof jogadores.$inferSelect;
-export type InsertJogador = typeof jogadores.$inferInsert;
+export type Jogador = typeof jogadoresTable.$inferSelect;
+export type InsertJogador = typeof jogadoresTable.$inferInsert;
 
-export const timesTableRelations = relations(times, ({ many }) => ({
-  jogadores: many(jogadores),
+// UMA única definição de relations por tabela
+export const timesTableRelations = relations(timesTable, ({ many }) => ({
+  jogadores: many(jogadoresTable),
+  partidas: many(partidasTable),
 }));
 
 // Partidas table
-export const partidas = pgTable("partidas", {
+export const partidasTable = pgTable("partidas", {
   id: serial("id").primaryKey(),
   idTime: integer("idTime")
     .notNull()
-    .references(() => times.id, { onDelete: "cascade" }),
+    .references(() => timesTable.id, { onDelete: "cascade" }),
   nomeTimeAdversario: varchar("nomeTimeAdversario", { length: 100 }).notNull(),
   data: timestamp("data").notNull(),
   campeonato: varchar("campeonato", { length: 100 }),
@@ -166,111 +172,110 @@ export const partidas = pgTable("partidas", {
   placarTime: integer("placarTime").default(0).notNull(),
   placarTimeAdversario: integer("placarTimeAdversario").default(0).notNull(),
   status: statusPartidaEnum("status").default("planejada"),
-  resultado: resultadoEnum("resultado").default("Sem Resultado"),
+  resultado: resultadoEnum("resultado").default("Sem_Resultado"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
-export type Partida = typeof partidas.$inferSelect;
-export type InsertPartida = typeof partidas.$inferInsert;
-
-export const partidasTableRelations = relations(partidas, ({ one }) => ({
-  time: one(times, {
-    fields: [partidas.idTime],
-    references: [times.id],
-  }),
-}));
-
-export const jogadoresTableRelations = relations(
-  jogadores,
-  ({ one, many }) => ({
-    time: one(times, {
-      fields: [jogadores.idTime],
-      references: [times.id],
-    }),
-    eventos: many(eventos),
-  }),
-);
+export type Partida = typeof partidasTable.$inferSelect;
+export type InsertPartida = typeof partidasTable.$inferInsert;
 
 // Eventos table
-export const eventos = pgTable("eventos", {
+export const eventosTable = pgTable("eventos", {
   id: serial("id").primaryKey(),
   idPartida: integer("idPartida")
     .notNull()
-    .references(() => partidas.id, { onDelete: "cascade" }),
+    .references(() => partidasTable.id, { onDelete: "cascade" }),
   idJogador: integer("idJogador")
     .notNull()
-    .references(() => jogadores.id, { onDelete: "cascade" }),
+    .references(() => jogadoresTable.id, { onDelete: "cascade" }),
   tipoEvento: tipoEventoEnum("tipoEvento").notNull(),
   minuto: integer("minuto").notNull(),
   tempo: tempoEnum("tempo").notNull(),
-  zona: zonaEnum("zona"),
   detalhes: text("detalhes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
-export type Evento = typeof eventos.$inferSelect;
-export type InsertEvento = typeof eventos.$inferInsert;
+export type Evento = typeof eventosTable.$inferSelect;
+export type InsertEvento = typeof eventosTable.$inferInsert;
 
-export const eventosTableRelations = relations(eventos, ({ one }) => ({
-  partida: one(partidas, {
-    fields: [eventos.idPartida],
-    references: [partidas.id],
+export const eventosTableRelations = relations(eventosTable, ({ one }) => ({
+  partida: one(partidasTable, {
+    fields: [eventosTable.idPartida],
+    references: [partidasTable.id],
   }),
-  jogador: one(jogadores, {
-    fields: [eventos.idJogador],
-    references: [jogadores.id],
+  jogador: one(jogadoresTable, {
+    fields: [eventosTable.idJogador],
+    references: [jogadoresTable.id],
   }),
 }));
 
 // Estatisticas table
-export const estatisticas = pgTable("estatisticas", {
-  id: serial("id").primaryKey(),
-  idJogador: integer("idJogador")
-    .notNull()
-    .references(() => jogadores.id, { onDelete: "cascade" }),
-  idPartida: integer("idPartida")
-    .notNull()
-    .references(() => partidas.id, { onDelete: "cascade" }),
-  finalizacaoCerta: integer("finalizacaoCerta").default(0).notNull(),
-  finalizacaoErrada: integer("finalizacaoErrada").default(0).notNull(),
-  assistencias: integer("assistencias").default(0).notNull(),
-  dribleCerto: integer("dribleCerto").default(0).notNull(),
-  dribleErrado: integer("dribleErrado").default(0).notNull(),
-  cruzamentos: integer("cruzamentos").default(0).notNull(),
-  desarmes: integer("desarmes").default(0).notNull(),
-  interceptacoes: integer("interceptacoes").default(0).notNull(),
-  ganhoBola: integer("ganhoBola").default(0).notNull(),
-  perdaBola: integer("perdaBola").default(0).notNull(),
-  faltas: integer("faltas").default(0).notNull(),
-  gols: integer("gols").default(0).notNull(),
-  nota: decimal("nota", { precision: 3, scale: 1 }).default("0"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
-});
+export const estatisticasTable = pgTable(
+  "estatisticas",
+  {
+    id: serial("id").primaryKey(),
+    idJogador: integer("idJogador")
+      .notNull()
+      .references(() => jogadoresTable.id, { onDelete: "cascade" }),
+    idPartida: integer("idPartida")
+      .notNull()
+      .references(() => partidasTable.id, { onDelete: "cascade" }),
+    nota: real("nota").default(6.0).notNull(), // Começa na nota base e mudou para 'real'
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  },
+  (table) => [
+    unique("jogador_partida_unique").on(table.idJogador, table.idPartida),
+  ],
+);
 
-export type Estatistica = typeof estatisticas.$inferSelect;
-export type InsertEstatistica = typeof estatisticas.$inferInsert;
+export const jogadoresTableRelations = relations(
+  jogadoresTable,
+  ({ one, many }) => ({
+    time: one(timesTable, {
+      fields: [jogadoresTable.idTime],
+      references: [timesTable.id],
+    }),
+    eventos: many(eventosTable),
+    estatisticas: many(estatisticasTable),
+  }),
+);
+
+export const partidasTableRelations = relations(
+  partidasTable,
+  ({ one, many }) => ({
+    time: one(timesTable, {
+      fields: [partidasTable.idTime],
+      references: [timesTable.id],
+    }),
+    estatisticas: many(estatisticasTable),
+    eventos: many(eventosTable),
+  }),
+);
+
+export type Estatistica = typeof estatisticasTable.$inferSelect;
+export type InsertEstatistica = typeof estatisticasTable.$inferInsert;
 
 export const estatisticasTableRelations = relations(
-  estatisticas,
+  estatisticasTable,
   ({ one }) => ({
-    jogador: one(jogadores, {
-      fields: [estatisticas.idJogador],
-      references: [jogadores.id],
+    jogador: one(jogadoresTable, {
+      fields: [estatisticasTable.idJogador],
+      references: [jogadoresTable.id],
     }),
-    partida: one(partidas, {
-      fields: [estatisticas.idPartida],
-      references: [partidas.id],
+    partida: one(partidasTable, {
+      fields: [estatisticasTable.idPartida],
+      references: [partidasTable.id],
     }),
   }),
 );
 
 // Relatorios table
-export const relatorios = pgTable("relatorios", {
+export const relatoriosTable = pgTable("relatorios", {
   id: serial("id").primaryKey(),
   idPartida: integer("idPartida")
     .notNull()
-    .references(() => partidas.id, { onDelete: "cascade" }),
-  melhorJogador: integer("melhorJogador").references(() => jogadores.id, {
+    .references(() => partidasTable.id, { onDelete: "cascade" }),
+  melhorJogador: integer("melhorJogador").references(() => jogadoresTable.id, {
     onDelete: "set null",
   }),
   analiseAoVivo: text("analiseAoVivo"),
@@ -280,12 +285,15 @@ export const relatorios = pgTable("relatorios", {
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
-export type Relatorio = typeof relatorios.$inferSelect;
-export type InsertRelatorio = typeof relatorios.$inferInsert;
+export type Relatorio = typeof relatoriosTable.$inferSelect;
+export type InsertRelatorio = typeof relatoriosTable.$inferInsert;
 
-export const relatoriosTableRelations = relations(relatorios, ({ one }) => ({
-  partida: one(partidas, {
-    fields: [relatorios.idPartida],
-    references: [partidas.id],
+export const relatoriosTableRelations = relations(
+  relatoriosTable,
+  ({ one }) => ({
+    partida: one(partidasTable, {
+      fields: [relatoriosTable.idPartida],
+      references: [partidasTable.id],
+    }),
   }),
-}));
+);
