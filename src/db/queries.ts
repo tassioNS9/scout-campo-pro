@@ -327,14 +327,6 @@ export async function getEventosByJogadorPartida(
     .orderBy(eventosTable.minuto);
 }
 
-export async function getEstatisticasByPartida(idPartida: number) {
-  return await db
-    .select()
-    .from(estatisticasTable)
-    .where(eq(estatisticasTable.idPartida, idPartida))
-    .orderBy(desc(estatisticasTable.nota));
-}
-
 export async function getEstatisticasByJogador(idJogador: number) {
   return await db
     .select()
@@ -359,35 +351,6 @@ export async function updateEstatistica(
     .update(estatisticasTable)
     .set({ ...data, updatedAt: new Date() })
     .where(eq(estatisticasTable.id, id))
-    .returning();
-  return result[0];
-}
-
-// Relatorios queries
-export async function createRelatorio(
-  data: typeof relatoriosTable.$inferInsert,
-) {
-  const result = await db.insert(relatoriosTable).values(data).returning();
-  return result[0];
-}
-
-export async function getRelatorioByPartida(idPartida: number) {
-  const result = await db
-    .select()
-    .from(relatoriosTable)
-    .where(eq(relatoriosTable.idPartida, idPartida))
-    .limit(1);
-  return result[0];
-}
-
-export async function updateRelatorio(
-  id: number,
-  data: Partial<typeof relatoriosTable.$inferInsert>,
-) {
-  const result = await db
-    .update(relatoriosTable)
-    .set({ ...data, updatedAt: new Date() })
-    .where(eq(relatoriosTable.id, id))
     .returning();
   return result[0];
 }
