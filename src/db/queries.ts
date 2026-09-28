@@ -9,7 +9,6 @@ import {
   eventosTable,
   jogadoresTable,
   partidasTable,
-  relatoriosTable,
   timesTable,
 } from "./schema";
 
