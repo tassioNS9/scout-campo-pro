@@ -1,8 +1,11 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
-import { deleteTime as deleteTimeQuery } from "@/db/queries";
+import { db } from "@/db";
+import { timesTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 export const deleteTime = async (id: number) => {
@@ -12,5 +15,7 @@ export const deleteTime = async (id: number) => {
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
-  return await deleteTimeQuery(id);
+
+  await db.delete(timesTable).where(eq(timesTable.id, id));
+  revalidatePath("/times");
 };
