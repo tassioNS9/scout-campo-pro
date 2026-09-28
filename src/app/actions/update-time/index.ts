@@ -1,9 +1,11 @@
 "use server";
 
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
-import { updateTime as updateTimeQuery } from "@/db/queries";
-import type { InsertTime } from "@/db/schema";
+import { db } from "@/db";
+import { type InsertTime, timesTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 type UpdateTimeInput = {
@@ -22,5 +24,11 @@ export const updateTime = async (data: UpdateTimeInput) => {
     throw new Error("Unauthorized");
   }
   const { id, ...payload } = data;
-  return await updateTimeQuery(id, payload);
+  await db
+    .update(timesTable)
+    .set({ ...payload, updatedAt: new Date() })
+    .where(eq(timesTable.id, id))
+    .returning();
+
+  revalidatePath("/times");
 };
