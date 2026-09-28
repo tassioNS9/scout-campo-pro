@@ -17,13 +17,17 @@ import RankingJogadores from "./RankingJogadores";
 import ResumoPartida from "./ResumoPartida";
 import SeletorPartida from "./SeletorPartida";
 
+type PartidaData = Awaited<ReturnType<typeof getHistoricoEventosByPartida>>;
+type ResumoPartidaData = Awaited<ReturnType<typeof getResumoByPartida>>;
+
 const RelatorioPartida = ({ partidas }: { partidas: Partida[] }) => {
-  const [partidaData, setPartidaData] = useState<any | null>(null);
-  const [resumoPartidaData, setResumoPartidaData] = useState<any | null>(null);
+  const [partidaData, setPartidaData] = useState<PartidaData | null>(null);
+  const [resumoPartidaData, setResumoPartidaData] =
+    useState<ResumoPartidaData | null>(null);
   const [partidaIdSelecionada, setPartidaIdSelecionada] = useState<
     number | null
   >(null);
-  const [erro, setErro] = useState<string | null>(null);
+  const [, setErro] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const relatorioRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +137,7 @@ const RelatorioPartida = ({ partidas }: { partidas: Partida[] }) => {
           <AnaliseTextual />
 
           {/* ── Row 3: Histórico de Eventos ── */}
-          <HistoricoEventos eventos={partidaData?.eventos} />
+          <HistoricoEventos eventos={partidaData?.eventos ?? []} />
         </div>
       )}
 

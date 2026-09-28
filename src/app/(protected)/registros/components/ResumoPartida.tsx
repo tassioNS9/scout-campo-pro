@@ -4,7 +4,15 @@ import { Activity } from "lucide-react";
 
 import { C } from "@/constants/Colors";
 
-const summaryCards = (m: any) => [
+interface ResumoPartidaData {
+  gols: number;
+  faltas: number;
+  desarmes: number;
+  assistencias: number;
+  totalEventos: number;
+}
+
+const summaryCards = (m: ResumoPartidaData | null | undefined) => [
   {
     label: "Gols",
     value: m?.gols,
@@ -35,7 +43,11 @@ const summaryCards = (m: any) => [
   },
 ];
 
-const ResumoPartida = ({ match }: { match: any }) => {
+const ResumoPartida = ({
+  match,
+}: {
+  match: ResumoPartidaData | null | undefined;
+}) => {
   return (
     <div
       className="rounded-xl p-5"

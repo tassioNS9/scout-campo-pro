@@ -4,15 +4,17 @@ import { Trophy } from "lucide-react";
 
 import { C } from "@/constants/Colors";
 
-function ratingColor(r: number) {
-  if (r >= 9) return "#00e676";
-  if (r >= 8) return "#f59e0b";
-  if (r >= 7.5) return "#fb923c";
-  return C.muted;
+interface EstatisticaRanking {
+  id: number;
+  idJogador: number;
+  nota: number;
 }
 
-const RankingJogadores = ({ estatistica }: { estatistica: any }) => {
-  console.log("RankingJogadores estatistica:", estatistica);
+const RankingJogadores = ({
+  estatistica,
+}: {
+  estatistica?: EstatisticaRanking[];
+}) => {
   return (
     <div
       className="rounded-xl p-5"
