@@ -1,233 +1,314 @@
-import { and, count, desc, eq, sum } from "drizzle-orm";
+import { and, count, desc, eq, sql, sum } from "drizzle-orm";
+import { headers } from "next/headers";
+
+import { auth } from "@/lib/auth";
 
 import { db } from "./index";
 import {
-  estatisticas,
-  eventos,
-  jogadores,
-  partidas,
-  relatorios,
-  times,
+  estatisticasTable,
+  eventosTable,
+  jogadoresTable,
+  partidasTable,
+  relatoriosTable,
+  timesTable,
 } from "./schema";
 
 // Times queries
-export async function createTime(data: typeof times.$inferInsert) {
-  const result = await db.insert(times).values(data).returning();
-  return result[0];
-}
-
-export async function getTimesAll() {
-  return await db.select().from(times).orderBy(times.nome);
-}
-
-export async function getTimeById(id: number) {
-  const result = await db.select().from(times).where(eq(times.id, id)).limit(1);
-  return result[0];
-}
 
 export async function updateTime(
   id: number,
-  data: Partial<typeof times.$inferInsert>,
+  data: Partial<typeof timesTable.$inferInsert>,
 ) {
   const result = await db
-    .update(times)
+    .update(timesTable)
     .set({ ...data, updatedAt: new Date() })
-    .where(eq(times.id, id))
+    .where(eq(timesTable.id, id))
     .returning();
   return result[0];
 }
 
-export async function deleteTime(id: number) {
-  return await db.delete(times).where(eq(times.id, id));
+export async function getTimesAll() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+  return await db.query.timesTable.findMany({
+    where: eq(timesTable.userId, session.user.id),
+  });
+}
+
+export async function getTimeById(id: number) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+  const result = await db.query.timesTable.findFirst({
+    where: and(eq(timesTable.id, id), eq(timesTable.userId, session.user.id)),
+    with: {
+      jogadores: true,
+    },
+  });
+  return result;
+}
+
+export async function getPlayerCount(idTime: number) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const result = await db
+    .select({ count: count() })
+    .from(jogadoresTable)
+    .where(eq(jogadoresTable.idTime, idTime));
+  return result;
 }
 
 // Jogadores queries
-export async function createJogador(data: typeof jogadores.$inferInsert) {
-  const result = await db.insert(jogadores).values(data).returning();
+export async function createJogador(data: typeof jogadoresTable.$inferInsert) {
+  const result = await db.insert(jogadoresTable).values(data).returning();
   return result[0];
 }
 
 export async function getJogadoresByTime(idTime: number) {
-  return await db
-    .select()
-    .from(jogadores)
-    .where(eq(jogadores.idTime, idTime))
-    .orderBy(jogadores.numero);
+  return await db.query.jogadoresTable.findMany({
+    where: eq(jogadoresTable.idTime, idTime),
+    orderBy: jogadoresTable.nome,
+  });
 }
 
 export async function getJogadorById(id: number) {
   const [jogador] = await db
     .select({
-      id: jogadores.id,
-      nome: jogadores.nome,
-      numero: jogadores.numero,
-      posicao: jogadores.posicao,
-      idade: jogadores.idade,
-      idTime: jogadores.idTime,
-      totalPartidas: count(estatisticas.idPartida),
-      totalGols: sum(estatisticas.gols),
-      totalAssistencias: sum(estatisticas.assistencias),
-      totalFinalizacoesCertas: sum(estatisticas.finalizacaoCerta),
-      totalFinalizacoesErradas: sum(estatisticas.finalizacaoErrada),
-      totalDriblesCertos: sum(estatisticas.dribleCerto),
-      totalDriblesErrados: sum(estatisticas.dribleErrado),
-      totalDesarmes: sum(estatisticas.desarmes),
-      totalInterceptacoes: sum(estatisticas.interceptacoes),
-      totalGanhoBola: sum(estatisticas.ganhoBola),
-      totalPerdaBola: sum(estatisticas.perdaBola),
-      totalFaltas: sum(estatisticas.faltas),
-      totalCruzamentos: sum(estatisticas.cruzamentos),
-      totalNota: sum(estatisticas.nota),
+      id: jogadoresTable.id,
+      nome: jogadoresTable.nome,
+      numero: jogadoresTable.numero,
+      posicao: jogadoresTable.posicao,
+      idade: jogadoresTable.idade,
+      idTime: jogadoresTable.idTime,
+      totalPartidas: count(estatisticasTable.idPartida),
+      totalNota: sum(estatisticasTable.nota),
     })
-    .from(jogadores)
-    .leftJoin(estatisticas, eq(jogadores.id, estatisticas.idJogador))
-    .where(eq(jogadores.id, id))
-    .groupBy(jogadores.id);
+    .from(jogadoresTable)
+    .leftJoin(
+      estatisticasTable,
+      eq(jogadoresTable.id, estatisticasTable.idJogador),
+    )
+    .where(eq(jogadoresTable.id, id))
+    .groupBy(jogadoresTable.id);
   return jogador;
 }
 
 export async function updateJogador(
   id: number,
-  data: Partial<typeof jogadores.$inferInsert>,
+  data: Partial<typeof jogadoresTable.$inferInsert>,
 ) {
   const result = await db
-    .update(jogadores)
+    .update(jogadoresTable)
     .set({ ...data, updatedAt: new Date() })
-    .where(eq(jogadores.id, id))
+    .where(eq(jogadoresTable.id, id))
     .returning();
   return result[0];
 }
 
-export async function deleteJogador(id: number) {
-  return await db.delete(jogadores).where(eq(jogadores.id, id));
-}
-
 // Partidas queries
-export async function createPartida(data: typeof partidas.$inferInsert) {
-  const result = await db.insert(partidas).values(data).returning();
+export async function createPartida(data: typeof partidasTable.$inferInsert) {
+  const result = await db.insert(partidasTable).values(data).returning();
   return result[0];
 }
+
+const partidaSelectShape = {
+  id: partidasTable.id,
+  data: partidasTable.data,
+  idTime: partidasTable.idTime,
+  nomeTime: timesTable.nome,
+  nomeTimeAdversario: partidasTable.nomeTimeAdversario,
+  placarTime: partidasTable.placarTime,
+  placarTimeAdversario: partidasTable.placarTimeAdversario,
+  status: partidasTable.status,
+  resultado: partidasTable.resultado,
+  campeonato: partidasTable.campeonato,
+  categoria: partidasTable.categoria,
+} as const;
 
 export async function getPartidas() {
-  return await db.select().from(partidas).orderBy(desc(partidas.data));
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) throw new Error("Unauthorized");
+
+  return db
+    .select(partidaSelectShape)
+    .from(partidasTable)
+    .innerJoin(timesTable, eq(partidasTable.idTime, timesTable.id))
+    .where(eq(timesTable.userId, session.user.id))
+    .orderBy(desc(partidasTable.data));
 }
 
-export async function getPartidaById(id: number) {
-  const result = await db
-    .select()
-    .from(partidas)
-    .where(eq(partidas.id, id))
+export async function getPartidaById(partidaId: number) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) throw new Error("Unauthorized");
+
+  const [row] = await db
+    .select(partidaSelectShape)
+    .from(partidasTable)
+    .innerJoin(timesTable, eq(partidasTable.idTime, timesTable.id))
+    .where(
+      and(
+        eq(partidasTable.id, partidaId),
+        eq(timesTable.userId, session.user.id),
+      ),
+    )
     .limit(1);
-  return result[0];
+
+  return row; // já é o objeto "achatado" com nomeTime, ou undefined
 }
 
-export type DashboardByPartidaData = {
-  partidaId: number;
-  resumo: {
-    jogos: number;
-    vitorias: number;
-    empates: number;
-    derrotas: number;
-  };
-  gerais: {
-    gols: number;
-    assistencias: number;
-    finalizacoes: number;
-    desarmes: number;
-  };
-  distribuicaoEventos: {
-    gols: number;
-    assistencias: number;
-    finalizacoes: number;
-    desarmes: number;
-  };
-};
+// Tipo único, derivado da query — reaproveitado nos dois casos
+export type Partida = Awaited<ReturnType<typeof getPartidas>>[number];
 
-function countEventosByTipo(
-  lista: Array<{ tipoEvento: string | null }>,
-  tipo: string,
-) {
-  return lista.reduce((total, item) => {
-    return total + (item.tipoEvento === tipo ? 1 : 0);
-  }, 0);
+function contadoresPorTipoEvento() {
+  return {
+    gols: sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'Gol')`.mapWith(
+      Number,
+    ),
+    golsContra:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'GolContra')`.mapWith(
+        Number,
+      ),
+    assistencias:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'Assistencia')`.mapWith(
+        Number,
+      ),
+    desarmes:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'Desarme')`.mapWith(
+        Number,
+      ),
+    faltasCometidas:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'FaltaCometida')`.mapWith(
+        Number,
+      ),
+    faltasSofridas:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'FaltaSofrida')`.mapWith(
+        Number,
+      ),
+    cartoesAmarelos:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'cartaoAmarelo')`.mapWith(
+        Number,
+      ),
+    cartoesVermelhos:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'cartaoVermelho')`.mapWith(
+        Number,
+      ),
+    penaltisCometidos:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'CometerPenalti')`.mapWith(
+        Number,
+      ),
+    penaltisSofridos:
+      sql<number>`count(*) filter (where ${eventosTable.tipoEvento} = 'SofrerPenalti')`.mapWith(
+        Number,
+      ),
+  };
 }
 
-export async function getDashboardByPartida(
-  idPartida: number,
-): Promise<DashboardByPartidaData | null> {
-  const partida = await getPartidaById(idPartida);
+export async function getHistoricoTotalJogador(idJogador: number) {
+  // 1. Total de eventos do jogador somando TODAS as partidas
 
-  if (!partida) {
-    return null;
-  }
+  // Gera um `count(*) filter (where tipoEvento = 'X')` para cada tipo do enum
+  const [perfil] = await db
+    .select({
+      nome: jogadoresTable.nome,
+      idade: jogadoresTable.idade,
+      numero: jogadoresTable.numero,
+      posicao: jogadoresTable.posicao,
+      fotoUrl: jogadoresTable.fotoUrl,
+    })
+    .from(jogadoresTable)
+    .where(eq(jogadoresTable.id, idJogador))
+    .limit(1);
 
-  const [eventosPartida] = await Promise.all([
-    db
-      .select({ tipoEvento: eventos.tipoEvento })
-      .from(eventos)
-      .where(eq(eventos.idPartida, idPartida)),
-  ]);
+  const [eventos] = await db
+    .select(contadoresPorTipoEvento())
+    .from(eventosTable)
+    .where(eq(eventosTable.idJogador, idJogador));
 
-  const gols = countEventosByTipo(eventosPartida, "Gol");
-  const assistencias = countEventosByTipo(eventosPartida, "Assistência");
-  const finalizacoes =
-    countEventosByTipo(eventosPartida, "Finalização Certa") +
-    countEventosByTipo(eventosPartida, "Finalização Errada");
-  const desarmes = countEventosByTipo(eventosPartida, "Desarme");
+  const [nota] = await db
+    .select({ nota: estatisticasTable.nota })
+    .from(estatisticasTable)
+    .where(eq(estatisticasTable.idJogador, idJogador));
 
-  const placarTimeA = partida.placarTime ?? 0;
-  const placarTimeB = partida.placarTimeAdversario ?? 0;
-  const vitorias = placarTimeA > placarTimeB ? 1 : 0;
-  const empates = placarTimeA === placarTimeB ? 1 : 0;
-  const derrotas = placarTimeA < placarTimeB ? 1 : 0;
+  const [{ totalPartidas }] = await db
+    .select({ totalPartidas: count() })
+    .from(estatisticasTable)
+    .where(eq(estatisticasTable.idJogador, idJogador));
 
   return {
-    partidaId: partida.id,
-    resumo: {
-      jogos: 1,
-      vitorias,
-      empates,
-      derrotas,
-    },
-    gerais: {
-      gols,
-      assistencias,
-      finalizacoes,
-      desarmes,
-    },
-    distribuicaoEventos: {
-      gols,
-      assistencias,
-      finalizacoes,
-      desarmes,
-    },
+    perfil,
+    eventos,
+    totalPartidas,
+    nota: nota?.nota ?? null,
   };
+}
+
+export async function getHistoricoPartidasPorJogador(idJogador: number) {
+  const partidas = await db
+    .select({
+      idPartida: partidasTable.id,
+      data: partidasTable.data,
+      adversario: partidasTable.nomeTimeAdversario,
+      placarTime: partidasTable.placarTime,
+      placarAdversario: partidasTable.placarTimeAdversario,
+      resultado: partidasTable.resultado,
+      casaOuFora: partidasTable.casaOuFora,
+      ...contadoresPorTipoEvento(),
+    })
+    .from(eventosTable)
+    .innerJoin(partidasTable, eq(eventosTable.idPartida, partidasTable.id))
+    .where(eq(eventosTable.idJogador, idJogador))
+    .groupBy(
+      partidasTable.id,
+      partidasTable.data,
+      partidasTable.nomeTimeAdversario,
+      partidasTable.placarTime,
+      partidasTable.placarTimeAdversario,
+      partidasTable.resultado,
+      partidasTable.casaOuFora,
+    )
+    .orderBy(partidasTable.data);
+
+  return partidas;
+  // [{ idPartida: 1, placarTime: 2, resultado: "Vitoria", gols: 1, desarmes: 1, cartoesAmarelos: 1, ... }, ...]
 }
 
 export async function updatePartida(
   id: number,
-  data: Partial<typeof partidas.$inferInsert>,
+  data: Partial<typeof partidasTable.$inferInsert>,
 ) {
   const result = await db
-    .update(partidas)
+    .update(partidasTable)
     .set({ ...data, updatedAt: new Date() })
-    .where(eq(partidas.id, id))
+    .where(eq(partidasTable.id, id))
     .returning();
   return result[0];
 }
 
 // Eventos queries
-export async function createEvento(data: typeof eventos.$inferInsert) {
-  const result = await db.insert(eventos).values(data).returning();
+export async function createEvento(data: typeof eventosTable.$inferInsert) {
+  const result = await db.insert(eventosTable).values(data).returning();
   return result[0];
 }
 
 export async function getEventosByPartida(idPartida: number) {
   return await db
     .select()
-    .from(eventos)
-    .where(eq(eventos.idPartida, idPartida))
-    .orderBy(eventos.minuto);
+    .from(eventosTable)
+    .where(eq(eventosTable.idPartida, idPartida))
+    .orderBy(eventosTable.minuto);
 }
 
 export async function getEventosByJogadorPartida(
@@ -236,80 +317,77 @@ export async function getEventosByJogadorPartida(
 ) {
   return await db
     .select()
-    .from(eventos)
+    .from(eventosTable)
     .where(
-      and(eq(eventos.idJogador, idJogador), eq(eventos.idPartida, idPartida)),
+      and(
+        eq(eventosTable.idJogador, idJogador),
+        eq(eventosTable.idPartida, idPartida),
+      ),
     )
-    .orderBy(eventos.minuto);
-}
-
-// Estatisticas queries
-export async function createEstatistica(
-  data: typeof estatisticas.$inferInsert,
-) {
-  const result = await db.insert(estatisticas).values(data).returning();
-  return result[0];
+    .orderBy(eventosTable.minuto);
 }
 
 export async function getEstatisticasByPartida(idPartida: number) {
   return await db
     .select()
-    .from(estatisticas)
-    .where(eq(estatisticas.idPartida, idPartida))
-    .orderBy(desc(estatisticas.nota));
+    .from(estatisticasTable)
+    .where(eq(estatisticasTable.idPartida, idPartida))
+    .orderBy(desc(estatisticasTable.nota));
 }
 
 export async function getEstatisticasByJogador(idJogador: number) {
   return await db
     .select()
-    .from(estatisticas)
-    .where(eq(estatisticas.idJogador, idJogador));
+    .from(estatisticasTable)
+    .where(eq(estatisticasTable.idJogador, idJogador));
 }
 
 export async function getEstatisticasByJogadorPartida(idJogador: number) {
   const result = await db
     .select()
-    .from(estatisticas)
-    .where(and(eq(estatisticas.idJogador, idJogador)));
+    .from(estatisticasTable)
+    .where(and(eq(estatisticasTable.idJogador, idJogador)));
 
   return result;
 }
 
 export async function updateEstatistica(
   id: number,
-  data: Partial<typeof estatisticas.$inferInsert>,
+  data: Partial<typeof estatisticasTable.$inferInsert>,
 ) {
   const result = await db
-    .update(estatisticas)
+    .update(estatisticasTable)
     .set({ ...data, updatedAt: new Date() })
-    .where(eq(estatisticas.id, id))
+    .where(eq(estatisticasTable.id, id))
     .returning();
   return result[0];
 }
 
 // Relatorios queries
-export async function createRelatorio(data: typeof relatorios.$inferInsert) {
-  const result = await db.insert(relatorios).values(data).returning();
+export async function createRelatorio(
+  data: typeof relatoriosTable.$inferInsert,
+) {
+  const result = await db.insert(relatoriosTable).values(data).returning();
   return result[0];
 }
 
 export async function getRelatorioByPartida(idPartida: number) {
   const result = await db
     .select()
-    .from(relatorios)
-    .where(eq(relatorios.idPartida, idPartida))
+    .from(relatoriosTable)
+    .where(eq(relatoriosTable.idPartida, idPartida))
     .limit(1);
   return result[0];
 }
 
 export async function updateRelatorio(
   id: number,
-  data: Partial<typeof relatorios.$inferInsert>,
+  data: Partial<typeof relatoriosTable.$inferInsert>,
 ) {
   const result = await db
-    .update(relatorios)
+    .update(relatoriosTable)
     .set({ ...data, updatedAt: new Date() })
-    .where(eq(relatorios.id, id))
+    .where(eq(relatoriosTable.id, id))
     .returning();
   return result[0];
 }
