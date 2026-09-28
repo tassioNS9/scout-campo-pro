@@ -2,427 +2,758 @@
 
 import {
   Activity,
-  BarChart3,
-  Bell,
+  ArrowRight,
+  BarChart2,
+  ChevronRight,
+  ClipboardList,
   FileText,
-  Grid3x3,
-  Handshake,
-  LogOut,
+  Menu,
+  Star,
+  Swords,
   Trophy,
-  UserCheck,
   Users,
+  X,
   Zap,
 } from "lucide-react";
+import { motion, useInView } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarSeparator,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { signOut, useSession } from "@/lib/auth-client";
+const C = {
+  bg: "#13192b",
+  bgAlt: "#0f1422",
+  card: "#1c2438",
+  cardHover: "#212b42",
+  cardHeader: "#161e30",
+  border: "#252f4a",
+  borderLight: "#2a3554",
+  green: "#00e676",
+  greenDim: "#1a3b2a",
+  greenBorder: "#1a4d30",
+  greenDeep: "#00b856",
+  text: "#e5e7eb",
+  muted: "#8b95b0",
+  dim: "#4b5780",
+};
 
-const menuItems = [
-  {
-    icon: Zap,
-    label: "Scout ao vivo",
-    href: "/scout",
-    iconClassName: "text-purple-400",
-  },
-  {
-    icon: BarChart3,
-    label: "Estatísticas completas",
-    href: "/dashboard",
-    iconClassName: "text-green-400",
-  },
-  {
-    icon: Grid3x3,
-    label: "Análise tática",
-    href: "/campo-tatico",
-    iconClassName: "text-blue-400",
-  },
-  {
-    icon: FileText,
-    label: "Relatórios em PDF",
-    href: "/relatorios",
-    iconClassName: "text-pink-400",
-  },
-  {
-    icon: Users,
-    label: "Múltiplos times",
-    href: "/times",
-    iconClassName: "text-yellow-400",
-  },
-  {
-    icon: Handshake,
-    label: "Partidas",
-    href: "/partidas",
-    iconClassName: "text-green-600",
-  },
-];
+// ─── Animated counter ─────────────────────────────────────────────────────────
+function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
 
-const cards = [
-  {
-    title: "Times",
-    description: "Cadastre e gerencie seus times",
-    icon: Users,
-    href: "/times",
-    colorClassName: "from-green-600 to-green-700",
-  },
-  {
-    title: "Jogadores",
-    description: "Gerencie jogadores por time",
-    icon: UserCheck,
-    href: "/jogadores",
-    colorClassName: "from-blue-600 to-blue-700",
-  },
-  {
-    title: "Scout ao Vivo",
-    description: "Registre eventos em tempo real",
-    icon: Zap,
-    href: "/scout",
-    colorClassName: "from-purple-600 to-purple-700",
-  },
-  {
-    title: "Dashboard",
-    description: "Visualize estatísticas e análises",
-    icon: BarChart3,
-    href: "/dashboard",
-    colorClassName: "from-orange-600 to-orange-700",
-  },
-  {
-    title: "Relatórios",
-    description: "Gere e exporte relatórios",
-    icon: FileText,
-    href: "/relatorios",
-    colorClassName: "from-pink-600 to-pink-700",
-  },
-  {
-    title: "Análise Tática",
-    description: "Análise automática de formações",
-    icon: Grid3x3,
-    href: "/campo-tatico",
-    colorClassName: "ffrom-teal-600 to-teal-700",
-  },
-];
-
-export default function Home() {
-  const { data: session, isPending } = useSession();
-  const router = useRouter();
-  const user = session?.user;
-  const isAuthenticated = Boolean(user);
-
-  const handleLogout = async () => {
-    await signOut();
-    router.refresh();
-  };
-
-  if (isPending) {
-    return (
-      <div className="home-loading-bg flex min-h-screen items-center justify-center">
-        <div className="text-muted-foreground">Carregando...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="text-foreground min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-black">
-        <nav className="border-border/60 bg-card/70 border-b backdrop-blur">
-          <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-2">
-              <div className="from-primary to-sidebar-primary flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br">
-                <span className="text-lg font-bold">⚽</span>
-              </div>
-              <h1 className="text-background text-xl font-bold">
-                Scout Campo Pro
-              </h1>
-            </div>
-            <Button asChild>
-              <Link href="/login">Entrar</Link>
-            </Button>
-          </div>
-        </nav>
-
-        <div className="container mx-auto px-4 py-20">
-          <div className="mx-auto mb-20 max-w-3xl text-center">
-            <h1 className="text-background mb-6 text-5xl leading-tight font-black">
-              Análise de Desempenho Profissional para Futebol
-            </h1>
-            <p className="text-muted-foreground mb-8 text-xl">
-              Plataforma sofisticada de scout e análise estatística em tempo
-              real para comissões técnicas
-            </p>
-            <Button asChild size="lg">
-              <Link href="/login">Começar Agora</Link>
-            </Button>
-          </div>
-
-          <div className="mb-20 grid gap-6 md:grid-cols-3">
-            <Card className="home-feature-card">
-              <CardHeader>
-                <Activity className="text-primary mb-2 h-8 w-8" />
-                <CardTitle>Scout ao Vivo</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Registre eventos em tempo real com cronômetro integrado e placar
-                automático
-              </CardContent>
-            </Card>
-            <Card className="home-feature-card">
-              <CardHeader>
-                <BarChart3 className="text-primary mb-2 h-8 w-8" />
-                <CardTitle>Estatísticas Avançadas</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Análise automática de desempenho com notas por posição e
-                heatmaps de atuação
-              </CardContent>
-            </Card>
-            <Card className="home-feature-card">
-              <CardHeader>
-                <FileText className="text-primary mb-2 h-8 w-8" />
-                <CardTitle>Relatórios em PDF</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Gere relatórios profissionais com resumo de estatísticas e
-                sugestões táticas
-              </CardContent>
-            </Card>
-            <Card className="home-feature-card">
-              <CardHeader>
-                <Users className="text-primary mb-2 h-8 w-8" />
-                <CardTitle>Gerenciamento de Times</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Cadastre e organize times, jogadores e categorias com facilidade
-              </CardContent>
-            </Card>
-            <Card className="home-feature-card">
-              <CardHeader>
-                <Zap className="text-primary mb-2 h-8 w-8" />
-                <CardTitle>Controle de Perfis</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Diferentes níveis de acesso para Treinador, Analista, Auxiliar e
-                Coordenador
-              </CardContent>
-            </Card>
-            <Card className="home-feature-card">
-              <CardHeader>
-                <Trophy className="text-primary mb-2 h-8 w-8" />
-                <CardTitle>Dashboard Completo</CardTitle>
-              </CardHeader>
-              <CardContent className="text-muted-foreground">
-                Visualize ranking de jogadores, comparações e análises táticas
-                em um só lugar
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="home-cta-bg rounded-lg p-12 text-center">
-            <h2 className="text-primary-foreground mb-4 text-3xl">
-              Pronto para elevar sua análise?
-            </h2>
-            <p className="text-primary-foreground/85 mb-6">
-              Acesse a plataforma e comece a scouts seus jogadores agora
-            </p>
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/login">Entrar na Plataforma</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!inView) return;
+    let start = 0;
+    const duration = 1800;
+    const step = 16;
+    const increment = to / (duration / step);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= to) {
+        setCount(to);
+        clearInterval(timer);
+      } else setCount(Math.floor(start));
+    }, step);
+    return () => clearInterval(timer);
+  }, [inView, to]);
 
   return (
-    <div className="min-h-screen text-white">
-      <SidebarProvider
-        defaultOpen
-        className="text-foreground bg-linear-to-br from-slate-900 via-slate-800 to-black"
+    <span ref={ref}>
+      {count.toLocaleString("pt-BR")}
+      {suffix}
+    </span>
+  );
+}
+
+// ─── Feature card ──────────────────────────────────────────────────────────────
+const features = [
+  {
+    icon: <Activity size={22} />,
+    title: "Scout ao Vivo",
+    desc: "Registre eventos em tempo real com cronômetro integrado e placar automático.",
+  },
+  {
+    icon: <BarChart2 size={22} />,
+    title: "Estatísticas Avançadas",
+    desc: "Análise automática de desempenho com notas por posição e heatmaps de atuação.",
+  },
+  {
+    icon: <FileText size={22} />,
+    title: "Relatórios em PDF",
+    desc: "Gere relatórios profissionais com resumo de estatísticas e sugestões táticas.",
+  },
+  {
+    icon: <Users size={22} />,
+    title: "Gerenciamento de Times",
+    desc: "Cadastre e organize times, jogadores e categorias com facilidade.",
+  },
+  {
+    icon: <Zap size={22} />,
+    title: "Controle de Perfis",
+    desc: "Diferentes níveis de acesso para Treinador, Analista, Auxiliar e Coordenador.",
+  },
+  {
+    icon: <Trophy size={22} />,
+    title: "Dashboard Completo",
+    desc: "Visualize ranking de jogadores, comparações e análises táticas em um só lugar.",
+  },
+];
+
+// ─── Stats ─────────────────────────────────────────────────────────────────────
+const stats = [
+  { value: 1200, suffix: "+", label: "Jogadores Cadastrados" },
+  { value: 340, suffix: "+", label: "Partidas Registradas" },
+  { value: 58, suffix: "+", label: "Times Ativos" },
+  { value: 99, suffix: "%", label: "Satisfação dos Treinadores" },
+];
+
+// ─── Component ─────────────────────────────────────────────────────────────────
+
+export default function Home() {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
+  function scrollTo(id: string) {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    setMobileMenuOpen(false);
+  }
+
+  const navLinks = [
+    { label: "Funcionalidades", id: "features" },
+    { label: "Estatísticas", id: "stats" },
+    { label: "Plataforma", id: "cta" },
+  ];
+
+  return (
+    <div
+      className="min-h-screen w-full overflow-x-hidden"
+      style={{
+        background: `linear-gradient(160deg, ${C.bg} 0%, ${C.bgAlt} 100%)`,
+      }}
+    >
+      {/* ── Navbar ── */}
+      <header
+        className="fixed top-0 right-0 left-0 z-50 transition-all duration-300"
+        style={{
+          backgroundColor: scrolled ? "rgba(19,25,43,0.95)" : "transparent",
+          borderBottom: scrolled
+            ? `1px solid ${C.border}`
+            : "1px solid transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+        }}
       >
-        <Sidebar collapsible="offcanvas" className="">
-          <SidebarHeader className="px-6 pt-6 pb-2">
-            <div className="hidden pb-6 text-center lg:block">
-              <div className="border-sidebar-primary/80 from-primary to-sidebar-primary text-primary-foreground mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl border-2 bg-linear-to-br text-4xl">
-                <span aria-hidden>⚽</span>
-              </div>
-              <h2 className="text-2xl leading-tight font-black">
-                <span className="text-sidebar-foreground">SCOUT</span>
-                <br />
-                <span className="text-sidebar-primary">CAMPO</span>
-                <br />
-                <span className="text-sidebar-foreground">PRO</span>
-              </h2>
-              <p className="text-muted-foreground mt-2 text-xs">
-                Análise Profissional
-              </p>
+        <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 md:px-6">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-16 w-16 items-center justify-center rounded-lg">
+              <Image
+                src="/logo_scout_pro.png"
+                alt="Logo"
+                width={200}
+                height={200}
+                loading="eager"
+              />
             </div>
-          </SidebarHeader>
-
-          <SidebarSeparator className="bg-sidebar-primary/30 mx-auto" />
-
-          <SidebarContent className="px-2 pt-2">
-            <SidebarGroup className="px-4">
-              <SidebarMenu>
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={item.label}
-                      className="text-sidebar-foreground/80 hover:bg-sidebar-primary/20 hover:text-sidebar-primary data-[active=true]:bg-sidebar-primary/25 data-[active=true]:text-sidebar-primary h-auto rounded-lg px-4 py-3 [&>svg]:size-5"
-                    >
-                      <Link href={item.href}>
-                        <item.icon
-                          className={`h-5 w-5 ${item.iconClassName}`}
-                        />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
-          </SidebarContent>
-
-          <SidebarFooter className="px-6 pb-6">
-            <Separator className="bg-sidebar-primary/30 mb-6" />
-            <div className="border-sidebar-primary/35 bg-sidebar-primary/15 rounded-lg border px-4 py-4 text-center">
-              <p className="text-sidebar-primary mb-2 text-sm font-semibold">
-                DESENVOLVIDO PARA
-              </p>
-              <p className="text-muted-foreground text-xs">
-                TREINADORES QUE FAZEM A DIFERENÇA!
-              </p>
-            </div>
-          </SidebarFooter>
-        </Sidebar>
-
-        <SidebarInset className="bg-transparent">
-          <header className="sticky top-0 z-50 border-b border-green-900 bg-black">
-            <div className="flex items-center justify-between px-6 py-4">
-              <div className="flex items-center gap-4">
-                <SidebarTrigger className="text-primary hover:text-primary lg:hidden" />
-                <div className="flex items-center gap-2">
-                  <div className="from-primary to-sidebar-primary flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br">
-                    <span className="text-lg font-bold">⚽</span>
-                  </div>
-                  <h1 className="text-background text-xl font-bold">
-                    Scout Campo Pro
-                  </h1>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <button className="relative rounded-lg p-2 transition hover:bg-slate-800">
-                  <Bell className="h-5 w-5 text-green-500" />
-                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-                </button>
-                <div className="flex items-center gap-3 border-l border-slate-700 pl-4">
-                  <div className="text-right">
-                    <p className="text-background text-sm font-semibold">
-                      {user?.name.split(" ")[0] || "Usuário"}
-                    </p>
-                    <p className="text-xs text-slate-400">Treinador</p>
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-red-500"
-                  >
-                    <LogOut className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          <div className="flex-1 overflow-auto">
-            <div className="p-6 lg:p-8">
-              <div className="mb-12">
-                <h2 className="text-background mb-2 text-4xl">
-                  Página Inicial
-                </h2>
-                <p className="text-muted-foreground">
-                  Acesse as funcionalidades da plataforma
-                </p>
-              </div>
-              <Separator className="bg-border/60 mb-8" />
-
-              <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                {cards.map((card) => (
-                  <Button
-                    key={card.title}
-                    asChild
-                    variant="ghost"
-                    className="group border-border/40 hover:border-primary/50 relative h-auto overflow-hidden rounded-xl border p-0 text-left shadow-lg transition-all duration-300 hover:scale-[1.02]"
-                  >
-                    <Link href={card.href}>
-                      <div
-                        className={`absolute inset-0 bg-linear-to-br ${card.colorClassName} opacity-90 transition group-hover:opacity-100`}
-                      />
-
-                      <div className="relative z-10 flex h-full flex-col items-start p-6">
-                        <div className="bg-primary-foreground/20 group-hover:bg-primary-foreground/30 mb-4 flex h-12 w-12 items-center justify-center rounded-lg transition">
-                          <card.icon className="text-primary-foreground h-6 w-6" />
-                        </div>
-                        <h3 className="text-primary-foreground mb-2 text-xl font-bold">
-                          {card.title}
-                        </h3>
-                        <p className="text-primary-foreground/85 text-sm">
-                          {card.description}
-                        </p>
-                      </div>
-
-                      <div className="bg-primary-foreground/15 absolute -top-10 -right-10 h-20 w-20 rounded-full transition-transform duration-300 group-hover:scale-150" />
-                    </Link>
-                  </Button>
-                ))}
-              </div>
-
-              <div className="border-border/80 rounded-xl border p-8 shadow-sm">
-                <h3 className="text-background mb-6 text-xl">
-                  Estatísticas Gerais
-                </h3>
-                <Separator className="bg-border/70 mb-6" />
-                <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-                  <div className="text-center">
-                    <p className="text-primary mb-2 text-3xl font-bold">8</p>
-                    <p className="text-muted-foreground text-sm">Jogos</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-chart-2 mb-2 text-3xl font-bold">5</p>
-                    <p className="text-muted-foreground text-sm">Vitórias</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-chart-4 mb-2 text-3xl font-bold">2</p>
-                    <p className="text-muted-foreground text-sm">Empates</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-destructive mb-2 text-3xl font-bold">
-                      1
-                    </p>
-                    <p className="text-muted-foreground text-sm">Derrotas</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <span
+              className="font-semibold text-white"
+              style={{ fontSize: "0.95rem" }}
+            >
+              Scout Campo Pro
+            </span>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-6 md:flex">
+            {navLinks.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => scrollTo(l.id)}
+                className="text-sm transition-colors"
+                style={{ color: C.muted }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* CTA + mobile toggle */}
+          <div className="flex items-center gap-3">
+            <Link href="/authentication">
+              <button
+                className="rounded-lg px-4 py-2 text-sm font-medium transition-opacity"
+                style={{ backgroundColor: C.green, color: "#000" }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              >
+                Entrar
+              </button>
+            </Link>
+            <button
+              className="rounded-lg p-2 md:hidden"
+              style={{ color: C.muted }}
+              onClick={() => setMobileMenuOpen((v) => !v)}
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-1 px-4 pb-4 md:hidden"
+            style={{
+              backgroundColor: "rgba(19,25,43,0.98)",
+              borderBottom: `1px solid ${C.border}`,
+            }}
+          >
+            {navLinks.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => scrollTo(l.id)}
+                className="rounded-lg px-3 py-2.5 text-left text-sm"
+                style={{ color: C.muted }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
+              >
+                {l.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </header>
+
+      {/* ── Hero ── */}
+      <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 pt-16 text-center">
+        {/* Background glow */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 50% at 50% 40%, rgba(0,230,118,0.07) 0%, transparent 70%)",
+          }}
+        />
+        {/* Grid overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `linear-gradient(${C.border} 1px, transparent 1px), linear-gradient(90deg, ${C.border} 1px, transparent 1px)`,
+            backgroundSize: "60px 60px",
+            maskImage:
+              "radial-gradient(ellipse 80% 60% at 50% 50%, black 30%, transparent 100%)",
+          }}
+        />
+
+        <div className="relative mx-auto max-w-3xl">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5"
+            style={{
+              backgroundColor: C.greenDim,
+              border: `1px solid ${C.greenBorder}`,
+            }}
+          >
+            <Star size={12} style={{ color: C.green }} />
+            <span style={{ color: C.green, fontSize: "0.75rem" }}>
+              Plataforma líder em scout de futebol
+            </span>
+          </motion.div>
+
+          {/* Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-5 leading-tight text-white"
+            style={{ fontSize: "clamp(2rem, 6vw, 3.5rem)", fontWeight: 700 }}
+          >
+            Análise de Desempenho{" "}
+            <span style={{ color: C.green }}>Profissional</span> para Futebol
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            style={{
+              color: C.muted,
+              fontSize: "clamp(0.95rem, 2.5vw, 1.1rem)",
+              lineHeight: 1.7,
+            }}
+            className="mx-auto mb-8 max-w-xl"
+          >
+            Plataforma sofisticada de scout e análise estatística em tempo real
+            para comissões técnicas que buscam excelência.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col items-center justify-center gap-3 sm:flex-row"
+          >
+            <Link href="/authentication">
+              <button
+                className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all sm:w-auto"
+                style={{
+                  backgroundColor: C.green,
+                  color: "#000",
+                  boxShadow: `0 0 24px rgba(0,230,118,0.35)`,
+                }}
+              >
+                Começar Agora
+                <ArrowRight size={16} />
+              </button>
+            </Link>
+            <button
+              onClick={() => scrollTo("features")}
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm transition-all sm:w-auto"
+              style={{
+                backgroundColor: C.card,
+                color: C.text,
+                border: `1px solid ${C.border}`,
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.borderColor = C.borderLight)
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.borderColor = C.border)
+              }
+            >
+              Ver funcionalidades
+              <ChevronRight size={16} />
+            </button>
+          </motion.div>
+
+          {/* Mini stats row */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+            className="mt-12 flex flex-wrap items-center justify-center gap-6"
+          >
+            {[
+              { icon: <Users size={14} />, label: "1.2k+ jogadores" },
+              { icon: <Swords size={14} />, label: "340+ partidas" },
+              { icon: <ClipboardList size={14} />, label: "Relatórios PDF" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-1.5">
+                <span style={{ color: C.green }}>{item.icon}</span>
+                <span style={{ color: C.muted, fontSize: "0.8rem" }}>
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          className="absolute bottom-10"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+        >
+          <div
+            className="mx-auto h-10 w-px"
+            style={{
+              background: `linear-gradient(to bottom, ${C.green}, transparent)`,
+            }}
+          />
+        </motion.div>
+      </section>
+
+      {/* ── Features ── */}
+      <section id="features" className="px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-14 text-center"
+          >
+            <span
+              className="mb-4 inline-block rounded-full px-3 py-1 text-xs"
+              style={{
+                backgroundColor: C.greenDim,
+                color: C.green,
+                border: `1px solid ${C.greenBorder}`,
+              }}
+            >
+              Funcionalidades
+            </span>
+            <h2
+              className="mb-3 text-white"
+              style={{
+                fontSize: "clamp(1.5rem, 4vw, 2.2rem)",
+                fontWeight: 700,
+              }}
+            >
+              Tudo que sua comissão técnica precisa
+            </h2>
+            <p
+              style={{
+                color: C.muted,
+                fontSize: "0.95rem",
+                maxWidth: "500px",
+                margin: "0 auto",
+              }}
+            >
+              Ferramentas profissionais integradas em uma única plataforma
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="group flex cursor-default flex-col gap-4 rounded-xl p-6 transition-all duration-200"
+                style={{
+                  backgroundColor: C.card,
+                  border: `1px solid ${C.border}`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = C.greenBorder;
+                  e.currentTarget.style.backgroundColor = C.cardHover;
+                  e.currentTarget.style.transform = "translateY(-3px)";
+                  e.currentTarget.style.boxShadow = `0 12px 32px rgba(0,0,0,0.3)`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = C.border;
+                  e.currentTarget.style.backgroundColor = C.card;
+                  e.currentTarget.style.transform = "none";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-xl transition-colors"
+                  style={{
+                    backgroundColor: C.greenDim,
+                    color: C.green,
+                    border: `1px solid ${C.greenBorder}`,
+                  }}
+                >
+                  {f.icon}
+                </div>
+                <div>
+                  <h3
+                    className="mb-2 text-white"
+                    style={{ fontSize: "0.95rem", fontWeight: 600 }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p
+                    style={{
+                      color: C.muted,
+                      fontSize: "0.85rem",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {f.desc}
+                  </p>
+                </div>
+                <div className="mt-auto flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span style={{ color: C.green, fontSize: "0.78rem" }}>
+                    Saiba mais
+                  </span>
+                  <ChevronRight size={12} style={{ color: C.green }} />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats ── */}
+      <section id="stats" className="px-4 py-20">
+        <div
+          className="relative mx-auto max-w-6xl overflow-hidden rounded-2xl p-10 md:p-16"
+          style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}
+        >
+          {/* bg glow */}
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 60% 80% at 50% 50%, rgba(0,230,118,0.04) 0%, transparent 70%)",
+            }}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative mb-12 text-center"
+          >
+            <h2
+              className="mb-2 text-white"
+              style={{
+                fontSize: "clamp(1.4rem, 3.5vw, 2rem)",
+                fontWeight: 700,
+              }}
+            >
+              Resultados que falam por si
+            </h2>
+            <p style={{ color: C.muted, fontSize: "0.9rem" }}>
+              Números da plataforma em tempo real
+            </p>
+          </motion.div>
+
+          <div className="relative grid grid-cols-2 gap-6 md:grid-cols-4">
+            {stats.map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+                className="rounded-xl p-4 text-center"
+                style={{
+                  backgroundColor: C.cardHeader,
+                  border: `1px solid ${C.border}`,
+                }}
+              >
+                <p
+                  className="mb-1"
+                  style={{
+                    color: C.green,
+                    fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
+                    fontWeight: 700,
+                    lineHeight: 1,
+                  }}
+                >
+                  <Counter to={s.value} suffix={s.suffix} />
+                </p>
+                <p
+                  style={{
+                    color: C.muted,
+                    fontSize: "0.78rem",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {s.label}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ── */}
+      <section className="px-4 py-20">
+        <div className="mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-14 text-center"
+          >
+            <span
+              className="mb-4 inline-block rounded-full px-3 py-1 text-xs"
+              style={{
+                backgroundColor: C.greenDim,
+                color: C.green,
+                border: `1px solid ${C.greenBorder}`,
+              }}
+            >
+              Como funciona
+            </span>
+            <h2
+              className="text-white"
+              style={{
+                fontSize: "clamp(1.5rem, 4vw, 2.2rem)",
+                fontWeight: 700,
+              }}
+            >
+              Simples, rápido e poderoso
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {[
+              {
+                step: "01",
+                title: "Cadastre seu time",
+                desc: "Adicione jogadores, defina posições e monte o elenco completo.",
+                icon: <Users size={20} />,
+              },
+              {
+                step: "02",
+                title: "Registre as partidas",
+                desc: "Scout ao vivo com cronômetro, eventos e placar automático.",
+                icon: <Swords size={20} />,
+              },
+              {
+                step: "03",
+                title: "Analise e evolua",
+                desc: "Relatórios detalhados, ranking de jogadores e sugestões táticas.",
+                icon: <BarChart2 size={20} />,
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
+                className="relative rounded-xl p-6"
+                style={{
+                  backgroundColor: C.card,
+                  border: `1px solid ${C.border}`,
+                }}
+              >
+                {/* Step number */}
+                <span
+                  className="absolute top-5 right-5 text-xs"
+                  style={{
+                    color: C.dim,
+                    fontWeight: 700,
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {item.step}
+                </span>
+                <div
+                  className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{
+                    backgroundColor: C.greenDim,
+                    color: C.green,
+                    border: `1px solid ${C.greenBorder}`,
+                  }}
+                >
+                  {item.icon}
+                </div>
+                <h3
+                  className="mb-2 text-white"
+                  style={{ fontSize: "0.95rem", fontWeight: 600 }}
+                >
+                  {item.title}
+                </h3>
+                <p
+                  style={{
+                    color: C.muted,
+                    fontSize: "0.85rem",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {item.desc}
+                </p>
+
+                {/* connector arrow (hidden on last) */}
+                {i < 2 && (
+                  <div className="absolute top-1/2 -right-3.5 z-10 hidden -translate-y-1/2 md:block">
+                    <ChevronRight size={20} style={{ color: C.dim }} />
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA banner ── */}
+      <section id="cta" className="px-4 py-16 pb-24">
+        <div className="mx-auto max-w-4xl">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative overflow-hidden rounded-2xl p-10 text-center md:p-14"
+            style={{ backgroundColor: C.green }}
+          >
+            {/* subtle pattern */}
+            <div
+              className="pointer-events-none absolute inset-0 opacity-10"
+              style={{
+                backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`,
+                backgroundSize: "28px 28px",
+              }}
+            />
+            <div className="relative">
+              <h2
+                className="mb-3"
+                style={{
+                  color: "#000",
+                  fontSize: "clamp(1.5rem, 4vw, 2rem)",
+                  fontWeight: 700,
+                }}
+              >
+                Pronto para elevar sua análise?
+              </h2>
+              <p
+                className="mb-8"
+                style={{ color: "rgba(0,0,0,0.65)", fontSize: "0.95rem" }}
+              >
+                Acesse a plataforma e comece a scouts seus jogadores agora
+              </p>
+              <Link href="/authentication">
+                <button
+                  className="inline-flex items-center gap-2 rounded-xl px-7 py-3 text-sm font-semibold transition-all"
+                  style={{ backgroundColor: "#fff", color: "#000" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow =
+                      "0 8px 24px rgba(0,0,0,0.2)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "none";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  Entrar na Plataforma
+                  <ArrowRight size={16} />
+                </button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer
+        className="px-4 py-6 text-center"
+        style={{ borderTop: `1px solid ${C.border}` }}
+      >
+        <div className="mb-2 flex items-center justify-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md">
+            <Image
+              src="/logo_scout_pro.png"
+              alt="Logo"
+              width={200}
+              height={200}
+              loading="eager"
+            />
+          </div>
+          <span className="text-sm font-medium text-white">
+            Scout Campo Pro
+          </span>
+        </div>
+        <p style={{ color: C.dim, fontSize: "0.78rem" }}>
+          © 2026 Scout Campo Pro. Todos os direitos reservados.
+        </p>
+      </footer>
     </div>
   );
 }
