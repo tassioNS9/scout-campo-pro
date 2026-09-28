@@ -40,6 +40,46 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-scout-bg: var(--scout-bg);
+  --color-scout-bg-alt: var(--scout-bg-alt);
+  --color-scout-card: var(--scout-card);
+  --color-scout-card-hover: var(--scout-card-hover);
+  --color-scout-card-header: var(--scout-card-header);
+  --color-scout-border: var(--scout-border);
+  --color-scout-border-light: var(--scout-border-light);
+  --color-scout-green: var(--scout-green);
+  --color-scout-green-dim: var(--scout-green-dim);
+  --color-scout-green-border: var(--scout-green-border);
+  --color-scout-text: var(--scout-text);
+  --color-scout-muted: var(--scout-muted);
+  --color-scout-dim: var(--scout-dim);
+  --color-scout-sub17-bg: var(--scout-sub17-bg);
+  --color-scout-sub17-border: var(--scout-sub17-border);
+  --color-scout-sub17-text: var(--scout-sub17-text);
+  --color-scout-profissional-bg: var(--scout-profissional-bg);
+  --color-scout-profissional-border: var(--scout-profissional-border);
+  --color-scout-profissional-text: var(--scout-profissional-text);
+  --color-scout-sub20-bg: var(--scout-sub20-bg);
+  --color-scout-sub20-border: var(--scout-sub20-border);
+  --color-scout-sub20-text: var(--scout-sub20-text);
+  --color-scout-goleiro-bg: var(--scout-goleiro-bg);
+  --color-scout-goleiro-text: var(--scout-goleiro-text);
+  --color-scout-goleiro-border: var(--scout-goleiro-border);
+  --color-scout-zagueiro-bg: var(--scout-zagueiro-bg);
+  --color-scout-zagueiro-text: var(--scout-zagueiro-text);
+  --color-scout-zagueiro-border: var(--scout-zagueiro-border);
+  --color-scout-lateral-bg: var(--scout-lateral-bg);
+  --color-scout-lateral-text: var(--scout-lateral-text);
+  --color-scout-lateral-border: var(--scout-lateral-border);
+  --color-scout-meia-bg: var(--scout-meia-bg);
+  --color-scout-meia-text: var(--scout-meia-text);
+  --color-scout-meia-border: var(--scout-meia-border);
+  --color-scout-atacante-bg: var(--scout-atacante-bg);
+  --color-scout-atacante-text: var(--scout-atacante-text);
+  --color-scout-atacante-border: var(--scout-atacante-border);
+  --color-scout-volante-bg: var(--scout-volante-bg);
+  --color-scout-volante-text: var(--scout-volante-text);
+  --color-scout-volante-border: var(--scout-volante-border);
 }
 
 :root {
@@ -47,6 +87,46 @@
   --primary-foreground: var(--color-green-50);
   --sidebar-primary: var(--color-green-600);
   --sidebar-primary-foreground: var(--color-green-50);
+  --scout-bg: #13192b;
+  --scout-bg-alt: #0f1422;
+  --scout-card: #1c2438;
+  --scout-card-hover: #212b42;
+  --scout-card-header: #161e30;
+  --scout-border: #252f4a;
+  --scout-border-light: #2a3554;
+  --scout-green: #00e676;
+  --scout-green-dim: #1a3b2a;
+  --scout-green-border: #1a4d30;
+  --scout-text: #e5e7eb;
+  --scout-muted: #8b95b0;
+  --scout-dim: #4b5780;
+  --scout-sub17-bg: #1a2540;
+  --scout-sub17-border: #1a3560;
+  --scout-sub17-text: #60a5fa;
+  --scout-profissional-bg: #2e1a1a;
+  --scout-profissional-border: #4a1a1a;
+  --scout-profissional-text: #f87171;
+  --scout-sub20-bg: #2e2018;
+  --scout-sub20-border: #4a2e10;
+  --scout-sub20-text: #fb923c;
+  --scout-goleiro-bg: #1a2e1a;
+  --scout-goleiro-text: #4ade80;
+  --scout-goleiro-border: #1a4a1a;
+  --scout-zagueiro-bg: #1a2540;
+  --scout-zagueiro-text: #60a5fa;
+  --scout-zagueiro-border: #1a3560;
+  --scout-lateral-bg: #1a2540;
+  --scout-lateral-text: #93c5fd;
+  --scout-lateral-border: #1a3560;
+  --scout-meia-bg: #2e2018;
+  --scout-meia-text: #fb923c;
+  --scout-meia-border: #4a2e10;
+  --scout-atacante-bg: #2e1a1a;
+  --scout-atacante-text: #f87171;
+  --scout-atacante-border: #4a1a1a;
+  --scout-volante-bg: #201a2e;
+  --scout-volante-text: #c084fc;
+  --scout-volante-border: #301a4a;
   --chart-1: var(--color-green-500);
   --chart-2: var(--color-purple-500);
   --chart-3: var(--color-orange-500);
@@ -70,7 +150,7 @@
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: #12182a;
   --sidebar-foreground: oklch(0.235 0.015 65);
   --sidebar-accent: oklch(0.967 0.001 286.375);
   --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
@@ -91,6 +171,28 @@
   --primary-foreground: var(--color-green-50);
   --sidebar-primary: var(--color-green-500);
   --sidebar-primary-foreground: var(--color-green-50);
+  --scout-bg: #13192b;
+  --scout-bg-alt: #0f1422;
+  --scout-card: #1c2438;
+  --scout-card-hover: #212b42;
+  --scout-card-header: #161e30;
+  --scout-border: #252f4a;
+  --scout-border-light: #2a3554;
+  --scout-green: #00e676;
+  --scout-green-dim: #1a3b2a;
+  --scout-green-border: #1a4d30;
+  --scout-text: #e5e7eb;
+  --scout-muted: #8b95b0;
+  --scout-dim: #4b5780;
+  --scout-sub17-bg: #1a2540;
+  --scout-sub17-border: #1a3560;
+  --scout-sub17-text: #60a5fa;
+  --scout-profissional-bg: #2e1a1a;
+  --scout-profissional-border: #4a1a1a;
+  --scout-profissional-text: #f87171;
+  --scout-sub20-bg: #2e2018;
+  --scout-sub20-border: #4a2e10;
+  --scout-sub20-text: #fb923c;
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.85 0.005 65);
   --card: oklch(0.21 0.006 285.885);
@@ -223,7 +325,7 @@
   }
 
   .text-gradient {
-    @apply from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent;
+    @apply from-primary to-accent bg-linear-to-r bg-clip-text text-transparent;
   }
 
   .input-focus {
@@ -261,11 +363,11 @@
   }
 
   .home-cta-bg {
-    @apply from-primary to-sidebar-primary bg-gradient-to-r;
+    @apply from-primary to-sidebar-primary bg-linear-to-r;
   }
 
   .home-brand-badge {
-    @apply from-primary to-sidebar-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br text-lg font-bold;
+    @apply from-primary to-sidebar-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br text-lg font-bold;
   }
 
   .home-notification-dot {
