@@ -1,9 +1,10 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
-import { updateJogador as updateJogadorQuery } from "@/db/queries";
-import type { InsertJogador } from "@/db/schema";
+import { db } from "@/db";
+import { type InsertJogador, jogadoresTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 type UpdateJogadorInput = {
@@ -21,6 +22,10 @@ export const updateJogador = async (data: UpdateJogadorInput) => {
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
-  const { id, ...payload } = data;
-  return await updateJogadorQuery(id, payload);
+
+  await db
+    .update(jogadoresTable)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(jogadoresTable.id, data?.id))
+    .returning();
 };
