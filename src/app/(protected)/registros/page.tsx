@@ -1,5 +1,4 @@
 import { listPartidas } from "@/app/actions/list-partidas";
-import { C } from "@/constants/Colors";
 
 import RelatorioPartida from "./components/RelatorioPartida";
 
@@ -7,12 +6,7 @@ export default async function RegistrosPage() {
   const partidas = await listPartidas();
 
   return (
-    <div
-      className="min-h-screen w-full"
-      style={{
-        background: `linear-gradient(160deg, ${C.bg} 0%, ${C.bgAlt} 100%)`,
-      }}
-    >
+    <div className="min-h-screen w-full bg-linear-to-br from-scout-bg to-scout-bg-alt">
       <RelatorioPartida partidas={partidas} />
     </div>
   );

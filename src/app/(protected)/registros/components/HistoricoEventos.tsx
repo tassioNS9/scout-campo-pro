@@ -2,8 +2,6 @@
 
 import { Activity } from "lucide-react";
 
-import { C } from "@/constants/Colors";
-
 interface HistoricoEventosProps {
   eventos: {
     id: number;
@@ -14,29 +12,21 @@ interface HistoricoEventosProps {
 
 const HistoricoEventos = ({ eventos }: HistoricoEventosProps) => {
   return (
-    <div
-      className="rounded-xl p-5"
-      style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}
-    >
+    <div className="rounded-xl border border-scout-border bg-scout-card p-5">
       <div className="mb-4 flex items-center gap-2">
-        <Activity size={15} style={{ color: C.green }} />
-        <h2 className="text-white" style={{ fontSize: "0.95rem" }}>
+        <Activity size={15} className="text-scout-green" />
+        <h2 className="text-sm text-scout-text">
           Histórico de Eventos
         </h2>
         <span
-          className="ml-auto rounded-full px-2 py-0.5 text-xs"
-          style={{
-            backgroundColor: C.greenDim,
-            color: C.green,
-            border: `1px solid ${C.greenBorder}`,
-          }}
+          className="ml-auto rounded-full border border-scout-green-border bg-scout-green-dim px-2 py-0.5 text-xs text-scout-green"
         >
           {eventos?.length} eventos
         </span>
       </div>
 
       {eventos?.length === 0 ? (
-        <p style={{ color: C.muted, fontSize: "0.88rem" }}>
+        <p className="text-sm text-scout-muted">
           Nenhum evento registrado para esta partida.
         </p>
       ) : (
@@ -45,29 +35,20 @@ const HistoricoEventos = ({ eventos }: HistoricoEventosProps) => {
             return (
               <div
                 key={ev.id}
-                className="flex items-center gap-3 py-3 transition-colors"
-                style={{
-                  borderBottom:
-                    i < eventos.length - 1 ? `1px solid ${C.border}` : "none",
-                }}
+                className={`flex items-center gap-3 py-3 transition-colors ${i < eventos.length - 1 ? "border-b border-scout-border" : ""}`}
               >
                 {/* Time badge */}
                 <div
-                  className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1"
-                  style={{
-                    backgroundColor: C.cardHeader,
-                    border: `1px solid ${C.border}`,
-                  }}
+                  className="flex shrink-0 items-center gap-1 rounded-lg border border-scout-border bg-scout-card-header px-2 py-1"
                 >
-                  <span style={{ color: C.dim, fontSize: "0.65rem" }}>
+                  <span className="text-[10px] text-scout-dim">
                     {ev.minuto}T
                   </span>
                 </div>
 
                 {/* Event type */}
                 <span
-                  className="flex-1 text-white"
-                  style={{ fontSize: "0.88rem" }}
+                  className="flex-1 text-sm text-scout-text"
                 >
                   {ev.tipoEvento}
                 </span>
@@ -75,8 +56,7 @@ const HistoricoEventos = ({ eventos }: HistoricoEventosProps) => {
                 {/* Category + player */}
                 <div className="flex items-center gap-2">
                   <span
-                    className="truncate"
-                    style={{ color: C.muted, fontSize: "0.82rem" }}
+                    className="truncate text-xs text-scout-muted"
                   >
                     {ev?.minuto ?? "Sem detalhes"}&quot;
                   </span>

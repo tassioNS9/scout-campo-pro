@@ -3,19 +3,6 @@ import { Check, ChevronDown } from "lucide-react";
 
 import { cn } from "../../lib/utils"; // ou ajuste o path
 
-const C = {
-  card: "#1c2438",
-  cardHover: "#212b42",
-  cardHeader: "#161e30",
-  border: "#252f4a",
-  green: "#00e676",
-  greenDim: "#1a3b2a",
-  greenBorder: "#1a4d30",
-  text: "#e5e7eb",
-  muted: "#8b95b0",
-  dim: "#4b5780",
-};
-
 export const NavySelect = SelectPrimitive.Root;
 export const NavySelectValue = SelectPrimitive.Value;
 
@@ -27,19 +14,14 @@ export function NavySelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        "flex w-full items-center gap-3 rounded-lg px-4 py-2 text-sm transition-colors outline-none",
+        "border-scout-border bg-scout-card text-scout-text hover:bg-scout-card-hover flex w-full items-center gap-3 rounded-lg border px-4 py-2 text-sm transition-colors outline-none",
         className,
       )}
-      style={{
-        backgroundColor: C.card,
-        color: C.text,
-        border: `1px solid ${C.border}`,
-      }}
       {...props}
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDown size={14} style={{ color: C.dim, marginLeft: "auto" }} />
+        <ChevronDown size={14} className="text-scout-dim ml-auto" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -54,13 +36,7 @@ export function NavySelectContent({
       <SelectPrimitive.Content
         position="popper"
         sideOffset={4}
-        className="animate-in fade-in-0 zoom-in-95 z-50 overflow-hidden rounded-lg"
-        style={{
-          backgroundColor: C.card,
-          border: `1px solid ${C.border}`,
-          minWidth: "var(--radix-select-trigger-width)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-        }}
+        className="animate-in fade-in-0 zoom-in-95 border-scout-border bg-scout-card z-50 min-w-(--radix-select-trigger-width) overflow-hidden rounded-lg border shadow-lg"
         {...props}
       >
         <SelectPrimitive.Viewport>{children}</SelectPrimitive.Viewport>
@@ -75,19 +51,12 @@ export function NavySelectItem({
 }: SelectPrimitive.SelectItemProps) {
   return (
     <SelectPrimitive.Item
-      className="flex cursor-pointer items-center gap-2 px-4 py-2 text-sm transition-colors outline-none"
-      style={{ color: C.text }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.backgroundColor = C.cardHover)
-      }
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.backgroundColor = "transparent")
-      }
+      className="text-scout-text hover:bg-scout-card-hover flex cursor-pointer items-center gap-2 px-4 py-2 text-sm transition-colors outline-none"
       {...props}
     >
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator className="ml-auto">
-        <Check size={13} style={{ color: C.green }} />
+        <Check size={13} className="text-scout-green" />
       </SelectPrimitive.ItemIndicator>
     </SelectPrimitive.Item>
   );

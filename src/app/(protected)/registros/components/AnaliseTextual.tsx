@@ -3,30 +3,20 @@
 import { Star } from "lucide-react";
 import { useState } from "react";
 
-import { C } from "@/constants/Colors";
-
 const AnaliseTextual = () => {
   const [analysis, setAnalysis] = useState("");
   const [suggestions, setSuggestions] = useState("");
 
   return (
-    <div
-      className="mb-4 rounded-xl p-5"
-      style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}
-    >
+    <div className="border-scout-border bg-scout-card mb-4 rounded-xl border p-5">
       <div className="mb-4 flex items-center gap-2">
-        <Star size={15} style={{ color: C.green }} />
-        <h2 className="text-white" style={{ fontSize: "0.95rem" }}>
-          Análise e Sugestões
-        </h2>
+        <Star size={15} className="text-scout-green" />
+        <h2 className="text-scout-text text-sm">Análise e Sugestões</h2>
       </div>
 
       <div className="flex flex-col gap-4">
         <div>
-          <label
-            className="mb-2 block"
-            style={{ color: C.muted, fontSize: "0.8rem" }}
-          >
+          <label className="text-scout-muted mb-2 block text-xs">
             Análise da Partida
           </label>
           <textarea
@@ -34,19 +24,11 @@ const AnaliseTextual = () => {
             value={analysis}
             onChange={(e) => setAnalysis(e.target.value)}
             placeholder="Descreva a análise geral da partida..."
-            className="w-full resize-none rounded-lg px-4 py-3 text-sm outline-none"
-            style={{
-              backgroundColor: C.cardHeader,
-              color: C.text,
-              border: `1px solid ${C.borderLight}`,
-            }}
+            className="border-scout-border-light bg-scout-card-header text-scout-text placeholder:text-scout-muted focus:border-scout-green focus:ring-scout-green w-full resize-none rounded-lg border px-4 py-3 text-sm outline-none focus:ring-1"
           />
         </div>
         <div>
-          <label
-            className="mb-2 block"
-            style={{ color: C.muted, fontSize: "0.8rem" }}
-          >
+          <label className="text-scout-muted mb-2 block text-xs">
             Sugestões Táticas
           </label>
           <textarea
@@ -54,12 +36,7 @@ const AnaliseTextual = () => {
             value={suggestions}
             onChange={(e) => setSuggestions(e.target.value)}
             placeholder="Descreva as sugestões táticas para próximas partidas..."
-            className="w-full resize-none rounded-lg px-4 py-3 text-sm outline-none"
-            style={{
-              backgroundColor: C.cardHeader,
-              color: C.text,
-              border: `1px solid ${C.borderLight}`,
-            }}
+            className="border-scout-border-light bg-scout-card-header text-scout-text placeholder:text-scout-muted focus:border-scout-green focus:ring-scout-green w-full resize-none rounded-lg border px-4 py-3 text-sm outline-none focus:ring-1"
           />
         </div>
       </div>

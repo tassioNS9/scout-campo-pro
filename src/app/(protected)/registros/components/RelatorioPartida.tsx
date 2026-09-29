@@ -6,8 +6,8 @@ import { useRef } from "react";
 
 import { getHistoricoEventosByPartida } from "@/app/actions/get-historico-eventos-by-partida";
 import { getResumoByPartida } from "@/app/actions/get-resumo-by-partida";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { C } from "@/constants/Colors";
 import { Partida } from "@/db/queries";
 import { exportToPdf } from "@/utils/exportPDF";
 
@@ -60,42 +60,28 @@ const RelatorioPartida = ({ partidas }: { partidas: Partida[] }) => {
     <div className="mx-auto max-w-6xl p-4 md:p-6">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
-        <button
-          className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2"
-          style={{
-            backgroundColor: C.card,
-            color: C.muted,
-            border: `1px solid ${C.border}`,
-          }}
+        <Button
+          variant="outline"
+          className="border-scout-border bg-scout-card text-scout-muted hover:bg-scout-card-hover hover:text-scout-text shrink-0"
         >
           <ArrowLeft size={16} />
           <span className="text-sm">Voltar</span>
-        </button>
+        </Button>
         <div className="flex items-center gap-2">
-          <div
-            className="shrink-0 rounded-lg p-2"
-            style={{
-              backgroundColor: C.greenDim,
-              border: `1px solid ${C.greenBorder}`,
-            }}
-          >
-            <FileText size={18} style={{ color: C.green }} />
+          <div className="border-scout-green-border bg-scout-green-dim shrink-0 rounded-lg border p-2">
+            <FileText size={18} className="text-scout-green" />
           </div>
           <div>
             <button
               onClick={() => exportToPdf(relatorioRef.current)}
-              className="flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm"
-              style={{ backgroundColor: C.green, color: "#000" }}
+              className="bg-scout-green text-scout-bg hover:bg-scout-green/90 flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm"
             >
               <FileDown size={15} />
               Gerar PDF do Relatório
             </button>
           </div>
           <div>
-            <h1
-              className="leading-tight text-white"
-              style={{ fontSize: "clamp(1rem, 4vw, 1.4rem)" }}
-            >
+            <h1 className="text-scout-text text-lg leading-tight">
               Relatórios de Partida
             </h1>
           </div>
@@ -110,17 +96,17 @@ const RelatorioPartida = ({ partidas }: { partidas: Partida[] }) => {
       />
 
       {!partidaIdSelecionada ? (
-        <Card className="mt-6 bg-[#1e293b] py-12 text-center">
+        <Card className="border-scout-border bg-scout-card mt-6 py-12 text-center">
           <CardContent>
-            <p className="text-slate-600">
+            <p className="text-scout-muted">
               Selecione uma partida para visualizar o relatório
             </p>
           </CardContent>
         </Card>
       ) : isPending ? (
-        <Card className="mt-6 bg-[#1e293b] py-12 text-center">
+        <Card className="border-scout-border bg-scout-card mt-6 py-12 text-center">
           <CardContent>
-            <p className="text-slate-600">Carregando relatório...</p>
+            <p className="text-scout-muted">Carregando relatório...</p>
           </CardContent>
         </Card>
       ) : (

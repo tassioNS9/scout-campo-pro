@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { C } from "@/constants/Colors";
 import { Partida } from "@/db/queries";
 
 type SeletorPartidaProps = {
@@ -31,16 +30,11 @@ const SeletorPartida = ({
           }
         >
           <SelectTrigger
-            className="w-full font-semibold text-[#8b95b0]"
-            style={{
-              backgroundColor: C.card,
-              border: `1px solid ${C.border}`,
-              minWidth: "280px",
-            }}
+            className="w-full min-w-70 border-scout-border bg-scout-card font-semibold text-scout-muted"
           >
             <SelectValue placeholder="Selecione uma partida" />
           </SelectTrigger>
-          <SelectContent className="bg-[#1c2438] text-white">
+          <SelectContent className="border-scout-border bg-scout-card text-scout-text">
             {partidas.map((p) => (
               <SelectItem key={p.id} value={p.id.toString()}>
                 {p.nomeTime.split(" ")[0]} ×{" "}

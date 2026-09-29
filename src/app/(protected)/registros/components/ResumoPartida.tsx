@@ -2,8 +2,6 @@
 
 import { Activity } from "lucide-react";
 
-import { C } from "@/constants/Colors";
-
 interface ResumoPartidaData {
   gols: number;
   faltas: number;
@@ -16,30 +14,30 @@ const summaryCards = (m: ResumoPartidaData | null | undefined) => [
   {
     label: "Gols",
     value: m?.gols,
-    color: "#00e676",
-    dimBg: "#1a3b2a",
-    border: "#1a4d30",
+    colorClass: "text-scout-green",
+    dimBgClass: "bg-scout-green-dim",
+    borderClass: "border-scout-green-border",
   },
   {
     label: "Faltas",
     value: m?.faltas,
-    color: "#60a5fa",
-    dimBg: "#1a2540",
-    border: "#1a3560",
+    colorClass: "text-scout-zagueiro-text",
+    dimBgClass: "bg-scout-zagueiro-bg",
+    borderClass: "border-scout-zagueiro-border",
   },
   {
     label: "Desarmes",
     value: m?.desarmes,
-    color: "#c084fc",
-    dimBg: "#201a2e",
-    border: "#301a4a",
+    colorClass: "text-scout-volante-text",
+    dimBgClass: "bg-scout-volante-bg",
+    borderClass: "border-scout-volante-border",
   },
   {
     label: "Assistências",
     value: m?.assistencias,
-    color: "#fb923c",
-    dimBg: "#2e2018",
-    border: "#4a2e10",
+    colorClass: "text-scout-meia-text",
+    dimBgClass: "bg-scout-meia-bg",
+    borderClass: "border-scout-meia-border",
   },
 ];
 
@@ -49,40 +47,20 @@ const ResumoPartida = ({
   match: ResumoPartidaData | null | undefined;
 }) => {
   return (
-    <div
-      className="rounded-xl p-5"
-      style={{ backgroundColor: C.card, border: `1px solid ${C.border}` }}
-    >
+    <div className="border-scout-border bg-scout-card rounded-xl border p-5">
       <div className="mb-4 flex items-center gap-2">
-        <Activity size={15} style={{ color: C.green }} />
-        <h2 className="text-white" style={{ fontSize: "0.95rem" }}>
-          Resumo da Partida
-        </h2>
+        <Activity size={15} className="text-scout-green" />
+        <h2 className="text-scout-text text-sm">Resumo da Partida</h2>
       </div>
 
       <div className="mb-3 grid grid-cols-2 gap-3">
         {summaryCards(match).map((s) => (
           <div
             key={s.label}
-            className="flex flex-col rounded-xl p-4"
-            style={{
-              backgroundColor: s.dimBg,
-              border: `1px solid ${s.border}`,
-            }}
+            className={`flex flex-col rounded-xl border p-4 ${s.dimBgClass} ${s.borderClass}`}
           >
-            <span
-              style={{ color: C.muted, fontSize: "0.78rem" }}
-              className="mb-1"
-            >
-              {s.label}
-            </span>
-            <span
-              style={{
-                color: s.color,
-                fontSize: "1.8rem",
-                lineHeight: 1,
-              }}
-            >
+            <span className="text-scout-muted mb-1 text-xs">{s.label}</span>
+            <span className={`text-3xl leading-none ${s.colorClass}`}>
               {s.value}
             </span>
           </div>
@@ -90,20 +68,9 @@ const ResumoPartida = ({
       </div>
 
       {/* Total de Eventos */}
-      <div
-        className="flex flex-col items-center rounded-xl p-4"
-        style={{
-          backgroundColor: C.cardHeader,
-          border: `1px solid ${C.border}`,
-        }}
-      >
-        <span style={{ color: C.muted, fontSize: "0.78rem" }} className="mb-1">
-          Total de Eventos
-        </span>
-        <span
-          className="text-white"
-          style={{ fontSize: "1.8rem", lineHeight: 1 }}
-        >
+      <div className="border-scout-border bg-scout-card-header flex flex-col items-center rounded-xl border p-4">
+        <span className="text-scout-muted mb-1 text-xs">Total de Eventos</span>
+        <span className="text-scout-text text-3xl leading-none">
           {match?.totalEventos}
         </span>
       </div>
