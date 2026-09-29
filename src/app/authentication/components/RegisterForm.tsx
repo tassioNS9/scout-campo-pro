@@ -62,7 +62,7 @@ export const RegisterForm = () => {
       {
         onSuccess: () => {
           toast.success("Conta criada com sucesso! Bem-vindo!");
-          router.push("/");
+          router.push("/home");
           router.refresh();
         },
         onError: (context) => {
