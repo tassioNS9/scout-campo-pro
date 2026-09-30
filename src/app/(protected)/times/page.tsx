@@ -1,7 +1,7 @@
-import { ArrowLeft, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 
 import { listTimes } from "@/app/actions/list-times";
-import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/back-button";
 
 import AddTimeButton from "./components/AddTimeButton";
 import FilterComponent from "./components/FilterComponent";
@@ -16,10 +16,7 @@ export default async function TimesPage() {
         {/* Header */}
         <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <Button className="border-scout-border bg-scout-card text-scout-muted flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2">
-              <ArrowLeft size={16} />
-              <span className="text-sm">Voltar</span>
-            </Button>
+            <BackButton />
 
             <div className="flex items-center gap-2">
               <div className="border-scout-green-border bg-scout-green-dim shrink-0 rounded-lg border p-2">

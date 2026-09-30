@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowLeft, FileDown, FileText } from "lucide-react";
+import { FileDown, FileText } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRef } from "react";
 
 import { getHistoricoEventosByPartida } from "@/app/actions/get-historico-eventos-by-partida";
 import { getResumoByPartida } from "@/app/actions/get-resumo-by-partida";
-import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/back-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Partida } from "@/db/queries";
 import { exportToPdf } from "@/utils/exportPDF";
@@ -60,13 +60,7 @@ const RelatorioPartida = ({ partidas }: { partidas: Partida[] }) => {
     <div className="mx-auto max-w-6xl p-4 md:p-6">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
-        <Button
-          variant="outline"
-          className="border-scout-border bg-scout-card text-scout-muted hover:bg-scout-card-hover hover:text-scout-text shrink-0"
-        >
-          <ArrowLeft size={16} />
-          <span className="text-sm">Voltar</span>
-        </Button>
+        <BackButton />
         <div className="flex items-center gap-2">
           <div className="border-scout-green-border bg-scout-green-dim shrink-0 rounded-lg border p-2">
             <FileText size={18} className="text-scout-green" />

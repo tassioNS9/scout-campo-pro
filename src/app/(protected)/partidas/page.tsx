@@ -1,9 +1,8 @@
-import { ArrowLeft, Swords } from "lucide-react";
-import Link from "next/link";
+import { Swords } from "lucide-react";
 
 import { listPartidas } from "@/app/actions/list-partidas";
 import { listTimes } from "@/app/actions/list-times";
-import { Button } from "@/components/ui/button";
+import { BackButton } from "@/components/back-button";
 import { Card, CardContent } from "@/components/ui/card";
 
 import CreatePartidaButton from "./components/CreatePartidaButton";
@@ -20,15 +19,7 @@ export default async function PartidasPage() {
       <div className="mx-auto max-w-6xl p-4 md:p-6">
         <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/">
-              <Button
-                className="border-scout-border bg-scout-card text-scout-muted flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2"
-                size="sm"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar
-              </Button>
-            </Link>
+            <BackButton />
 
             <div className="flex items-center gap-2">
               <div className="border-scout-green-border bg-scout-green-dim shrink-0 rounded-lg border p-2">

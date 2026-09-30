@@ -1,9 +1,10 @@
-import { ArrowLeft, ClipboardList, Shield, Swords } from "lucide-react";
+import { ClipboardList, Shield, Swords } from "lucide-react";
 import Link from "next/link";
 
 import { getCountJogadoresByTime } from "@/app/actions/get-count-jogadores-by-time";
 import { listJogadoresByTime } from "@/app/actions/list-jogadores-by-time";
 import { listTimes } from "@/app/actions/list-times";
+import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
 
 import CreateJogadorButton from "../components/CreateJogadorButton";
@@ -28,26 +29,18 @@ const TimeListPage = async ({
       <div className="mx-auto max-w-6xl p-4 md:p-6">
         <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/">
-              <Button
-                variant="outline"
-                className="flex h-auto shrink-0 items-center justify-center gap-2 rounded-lg border border-scout-border bg-scout-card px-3 py-2 text-scout-muted hover:bg-scout-card-hover hover:text-scout-text"
-              >
-                <ArrowLeft size={16} />
-                <span className="text-sm font-normal">Voltar</span>
-              </Button>
-            </Link>
+            <BackButton />
 
             <div className="flex items-center gap-2">
-              <div className="shrink-0 rounded-lg border border-scout-green-border bg-scout-green-dim p-2">
+              <div className="border-scout-green-border bg-scout-green-dim shrink-0 rounded-lg border p-2">
                 <Shield size={18} className="text-scout-green" />
               </div>
 
               <div>
-                <h1 className="mb-0 text-[clamp(1rem,4vw,1.4rem)] leading-tight text-scout-text">
+                <h1 className="text-scout-text mb-0 text-[clamp(1rem,4vw,1.4rem)] leading-tight">
                   Gerenciamento de Jogadores
                 </h1>
-                <p className="mb-0 text-[0.78rem] text-scout-muted">
+                <p className="text-scout-muted mb-0 text-[0.78rem]">
                   Cadastre e organize seus jogadores
                 </p>
               </div>
@@ -58,7 +51,7 @@ const TimeListPage = async ({
             <Link href="/partidas">
               <Button
                 variant="outline"
-                className="flex h-auto flex-1 items-center justify-center gap-2 rounded-lg border border-scout-border bg-scout-card px-3 py-2 text-scout-muted hover:bg-scout-card-hover hover:text-scout-text md:flex-none"
+                className="border-scout-border bg-scout-card text-scout-muted hover:bg-scout-card-hover hover:text-scout-text flex h-auto flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 md:flex-none"
               >
                 <Swords size={15} />
                 <span className="text-sm font-normal">Partidas</span>
@@ -67,7 +60,7 @@ const TimeListPage = async ({
 
             <Button
               variant="outline"
-              className="flex h-auto flex-1 items-center justify-center gap-2 rounded-lg border border-scout-green-border bg-scout-green-dim px-3 py-2 text-scout-green hover:bg-scout-green hover:text-black md:flex-none"
+              className="border-scout-green-border bg-scout-green-dim text-scout-green hover:bg-scout-green flex h-auto flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 hover:text-black md:flex-none"
             >
               <ClipboardList size={15} />
               <span className="text-sm font-normal">Registros</span>
@@ -80,7 +73,7 @@ const TimeListPage = async ({
         <div className="mb-5 flex flex-col gap-3 md:mb-6 md:flex-row md:items-end md:gap-4">
           <SelectTimes times={times} timeIdSelecionado={timeIdSelecionado} />
 
-          <div className="flex shrink-0 items-center gap-0 overflow-hidden rounded-lg border border-scout-border">
+          <div className="border-scout-border flex shrink-0 items-center gap-0 overflow-hidden rounded-lg border">
             {[
               { label: "Jogadores", value: playerCount },
               { label: "Gols", value: 0 },
@@ -89,11 +82,15 @@ const TimeListPage = async ({
               <div
                 key={stat.label}
                 className={`flex-1 px-4 py-2 text-center ${
-                  i > 0 ? "border-l border-scout-border" : ""
+                  i > 0 ? "border-scout-border border-l" : ""
                 } bg-scout-card`}
               >
-                <p className="mb-0 text-[1rem] text-scout-green">{stat.value}</p>
-                <p className="mb-0 text-[0.65rem] text-scout-dim">{stat.label}</p>
+                <p className="text-scout-green mb-0 text-[1rem]">
+                  {stat.value}
+                </p>
+                <p className="text-scout-dim mb-0 text-[0.65rem]">
+                  {stat.label}
+                </p>
               </div>
             ))}
           </div>
