@@ -68,7 +68,7 @@ const ListTimes = ({ times }: { times: Time[] }) => {
                     alt="Escudo do time"
                     width={60}
                     height={60}
-                    className="h-auto w-16"
+                    className="h-16 w-16 rounded-full"
                   />
                 </div>
 
