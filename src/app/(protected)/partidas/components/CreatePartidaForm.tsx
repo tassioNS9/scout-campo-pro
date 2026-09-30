@@ -7,6 +7,8 @@ import { createPartida } from "@/app/actions/create-partida";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -81,31 +83,36 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
     }
   };
   return (
-    <DialogContent className="w-[90%]">
+    <DialogContent className="bg-scout-card border-scout-border w-full max-w-90 rounded-t-2xl border p-6 md:rounded-2xl">
       <DialogHeader>
-        <DialogTitle>Criar Nova Partida</DialogTitle>
+        <DialogTitle className="text-scout-text">Criar Nova Partida</DialogTitle>
+        <DialogDescription className="text-scout-muted text-sm">
+          Preencha os campos abaixo para criar uma nova partida.
+        </DialogDescription>
       </DialogHeader>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleCreatePartida)}
-          className="space-y-4"
+          className="mt-2 flex flex-col gap-4"
         >
           <FormField
             control={form.control}
             name="idTime"
             render={({ field }) => (
-              <FormItem className="flex flex-col gap-2">
-                <FormLabel>Selecione o seu Time</FormLabel>
+              <FormItem>
+                <FormLabel className="text-scout-muted text-xs">
+                  Selecione o seu Time
+                </FormLabel>
                 <Select
                   value={field.value ? field.value.toString() : ""}
                   onValueChange={(value) => field.onChange(Number(value))}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="text-scout-muted w-full font-semibold">
                       <SelectValue placeholder="Selecione um time" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-scout-bg text-scout-text">
                     {times?.map((time) => (
                       <SelectItem key={time.id} value={time.id.toString()}>
                         {time.nome}
@@ -121,12 +128,14 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
             control={form.control}
             name="nomeTimeAdversario"
             render={({ field }) => (
-              <FormItem className="flex flex-col gap-2">
-                <FormLabel>Time Adversário</FormLabel>
+              <FormItem>
+                <FormLabel className="text-scout-muted text-xs">
+                  Time Adversário
+                </FormLabel>
                 <FormControl>
                   <Input
-                    className="w-40"
-                    placeholder="Selecione um time"
+                    className="text-scout-muted text-xs font-semibold"
+                    placeholder="Ex: Esporte Clube A"
                     {...field}
                   />
                 </FormControl>
@@ -138,10 +147,16 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
             control={form.control}
             name="data"
             render={({ field }) => (
-              <FormItem className="flex flex-col gap-2">
-                <FormLabel>Data e Hora</FormLabel>
+              <FormItem>
+                <FormLabel className="text-scout-muted text-xs">
+                  Data e Hora
+                </FormLabel>
                 <FormControl>
-                  <Input type="datetime-local" {...field} />
+                  <Input
+                    className="text-scout-muted text-xs font-semibold"
+                    type="datetime-local"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -151,10 +166,16 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
             control={form.control}
             name="campeonato"
             render={({ field }) => (
-              <FormItem className="flex flex-col gap-2">
-                <FormLabel>Campeonato</FormLabel>
+              <FormItem>
+                <FormLabel className="text-scout-muted text-xs">
+                  Campeonato
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Ex: Campeonato Estadual" {...field} />
+                  <Input
+                    className="text-scout-muted text-xs font-semibold"
+                    placeholder="Ex: Campeonato Estadual"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -164,15 +185,20 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
             control={form.control}
             name="categoria"
             render={({ field }) => (
-              <FormItem className="flex flex-col gap-2">
-                <FormLabel>Categoria</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
+              <FormItem>
+                <FormLabel className="text-scout-muted text-xs">
+                  Categoria
+                </FormLabel>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger className="text-scout-muted w-full font-semibold">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-scout-bg text-scout-text">
                     <SelectItem value="Sub-17">Sub-17</SelectItem>
                     <SelectItem value="Sub-20">Sub-20</SelectItem>
                     <SelectItem value="Profissional">Profissional</SelectItem>
@@ -182,13 +208,15 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
               </FormItem>
             )}
           />
-          <Button
-            type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? "Criando..." : "Criar Partida"}
-          </Button>
+          <DialogFooter className="mt-6">
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="bg-scout-green w-full rounded-lg py-2 text-sm font-semibold text-black opacity-100 transition-opacity hover:opacity-85"
+            >
+              {form.formState.isSubmitting ? "Criando..." : "Criar Partida"}
+            </Button>
+          </DialogFooter>
         </form>
       </Form>
     </DialogContent>
