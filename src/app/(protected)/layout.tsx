@@ -21,12 +21,11 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { SidebarNavItem } from "@/components/ui/sidebar-nav-item";
 import { auth } from "@/lib/auth";
 
 const menuItems = [
@@ -75,6 +74,7 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
   if (!data?.user) {
     redirect("/");
   }
+  
   return (
     <div className="min-h-screen text-white">
       <SidebarProvider defaultOpen className="home-app-bg text-foreground">
@@ -109,20 +109,9 @@ const Layout = async ({ children }: { children: React.ReactNode }) => {
             <SidebarGroup className="px-4">
               <SidebarMenu>
                 {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={item.label}
-                      className="hover:bg-sidebar-primary/20 hover:text-sidebar-primary data-[active=true]:bg-sidebar-primary/25 data-[active=true]:text-sidebar-primary h-auto rounded-lg px-4 py-3 text-white/80 [&>svg]:size-5"
-                    >
-                      <Link href={item.href}>
-                        <item.icon
-                          className={`h-5 w-5 ${item.iconClassName}`}
-                        />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  <SidebarNavItem key={item.href} href={item.href} label={item.label}>
+                  <item.icon className={`h-5 w-5 ${item.iconClassName}`} />
+                  </SidebarNavItem>
                 ))}
               </SidebarMenu>
             </SidebarGroup>
