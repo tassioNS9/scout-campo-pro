@@ -329,7 +329,7 @@ const CreateJogadorForm = ({ times, onSuccess }: CreateJogadorFormProps) => {
               disabled={form.formState.isSubmitting}
               className="bg-scout-green text-scout-bg hover:bg-scout-green/90 flex-1 rounded-lg py-2 text-sm font-semibold opacity-100 transition-opacity hover:opacity-85"
             >
-              Adicionar Jogador
+              {form.formState.isSubmitting ? "Criando..." : "Criar Jogador"}
             </Button>
           </DialogFooter>
         </form>
