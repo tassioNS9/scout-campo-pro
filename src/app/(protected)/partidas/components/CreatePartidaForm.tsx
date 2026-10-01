@@ -82,10 +82,17 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
       toast.error("Falha ao criar partida");
     }
   };
+
+  const handleClose = () => {
+    form.reset();
+    onSuccess();
+  };
   return (
     <DialogContent className="bg-scout-card border-scout-border w-full max-w-90 rounded-t-2xl border p-6 md:rounded-2xl">
       <DialogHeader>
-        <DialogTitle className="text-scout-text">Criar Nova Partida</DialogTitle>
+        <DialogTitle className="text-scout-text">
+          Criar Nova Partida
+        </DialogTitle>
         <DialogDescription className="text-scout-muted text-sm">
           Preencha os campos abaixo para criar uma nova partida.
         </DialogDescription>
@@ -189,10 +196,7 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
                 <FormLabel className="text-scout-muted text-xs">
                   Categoria
                 </FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
+                <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger className="text-scout-muted w-full font-semibold">
                       <SelectValue />
@@ -215,6 +219,14 @@ const CreatePartidaForm = ({ times, onSuccess }: CreatePartidaFormProps) => {
               className="bg-scout-green w-full rounded-lg py-2 text-sm font-semibold text-black opacity-100 transition-opacity hover:opacity-85"
             >
               {form.formState.isSubmitting ? "Criando..." : "Criar Partida"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-scout-border bg-scout-card-header text-scout-muted flex-1 rounded-lg border py-2 text-sm"
+              onClick={handleClose}
+            >
+              Cancelar
             </Button>
           </DialogFooter>
         </form>
