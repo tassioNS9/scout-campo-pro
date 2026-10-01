@@ -101,14 +101,22 @@ const CreateJogadorForm = ({ times, onSuccess }: CreateJogadorFormProps) => {
       formData.append("foto", data.foto);
     }
     try {
-      await createJogador(formData);
-      toast.success("Jogador criado com sucesso!");
-      handleClose();
-    } catch {
-      toast.error("Erro ao criar jogador. Por favor, tente novamente.");
-    }
+      const result = await createJogador(formData);
 
-    form.reset();
+      if (!result?.sucesso) {
+        toast.error("Verifique os campos do formulário.");
+        return;
+      }
+
+      if (result.avisoFoto) {
+        toast.warning(result.avisoFoto);
+      } else {
+        toast.success("Jogador criado com sucesso!");
+        handleClose();
+      }
+    } catch {
+      toast.error("Erro ao criar o jogador.");
+    }
   };
 
   const handleClose = () => {

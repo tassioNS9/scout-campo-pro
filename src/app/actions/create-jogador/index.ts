@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { refresh } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import z from "zod";
 
@@ -49,37 +49,45 @@ export const createJogador = async (formData: FormData) => {
     })
     .returning();
 
-  // 3. Se enviou foto, faz upload e atualiza o registro
-  if (foto) {
-    const extensao = foto.type.split("/")[1];
-    const path = `jogadores/${jogador.id}/foto.${extensao}`;
-    console.log("Path da foto:", path);
+  try {
+    // 3. Se enviou foto, faz upload e atualiza o registro
+    if (foto) {
+      const extensao = foto.type.split("/")[1];
+      const path = `jogadores/${jogador.id}/foto.${extensao}`;
 
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("escudos-times")
-      .upload(path, foto, { upsert: true, contentType: foto.type });
-    console.log("Resultado do upload da foto:", { uploadError });
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("escudos-times")
+        .upload(path, foto, { upsert: true, contentType: foto.type });
 
-    if (uploadError) {
-      // jogador já foi criado, mas a foto falhou — não desfaz o jogador,
-      // só avisa que o upload deu erro (usuário pode tentar de novo depois)
-      return {
-        sucesso: true,
-        jogadorId: jogador.id,
-        avisoFoto:
-          "Jogador criado, mas houve falha ao enviar a foto. Tente novamente na edição.",
-      };
+      if (uploadError) {
+        return {
+          sucesso: true,
+          jogadorId: jogador.id,
+          avisoFoto:
+            "Jogador criado, mas houve falha ao enviar a foto. Tente novamente na edição.",
+        };
+      }
+
+      const { data: publicUrlData } = supabaseAdmin.storage
+        .from("escudos-times")
+        .getPublicUrl(path);
+
+      await db
+        .update(jogadoresTable)
+        .set({ fotoUrl: publicUrlData.publicUrl, fotoPath: path })
+        .where(eq(jogadoresTable.id, jogador.id));
     }
 
-    const { data: publicUrlData } = supabaseAdmin.storage
-      .from("escudos-times")
-      .getPublicUrl(path);
-
-    await db
-      .update(jogadoresTable)
-      .set({ fotoUrl: publicUrlData.publicUrl, fotoPath: path })
-      .where(eq(jogadoresTable.id, jogador.id));
+    return { sucesso: true, jogadorId: jogador.id };
+  } catch (error) {
+    console.error("Erro ao finalizar criação do jogador:", error);
+    return {
+      sucesso: true,
+      jogadorId: jogador.id,
+      avisoFoto: "Jogador criado, mas houve um problema ao salvar a foto.",
+    };
+  } finally {
+    // 4. Revalida a rota de jogadores para refletir a mudança
+    revalidatePath("/jogador");
   }
-  refresh();
-  return { sucesso: true, jogadorId: jogador.id };
 };
