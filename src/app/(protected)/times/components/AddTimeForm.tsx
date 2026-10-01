@@ -77,9 +77,18 @@ export default function AddTimeFormTeste({
     if (values.escudo) formData.append("escudo", values.escudo);
 
     try {
-      await createTime(formData);
-      toast.success("Time criado com sucesso!");
-      onSuccess?.();
+      const result = await createTime(formData);
+
+      if (!result?.sucesso) {
+        toast.error("Verifique os campos do formulário.");
+        return;
+      }
+      if (result.avisoEscudo) {
+        toast.warning(result.avisoEscudo);
+      } else {
+        toast.success("Time criado com sucesso!");
+        handleClose();
+      }
     } catch (error) {
       console.error("Erro ao processar os dados do formulário:", error);
       toast.error("Erro ao criar o time.");
@@ -89,8 +98,9 @@ export default function AddTimeFormTeste({
 
   const handleClose = () => {
     form.reset();
-    onSuccess?.();
+    form.setValue("escudo", undefined);
     setPreview(null);
+    onSuccess?.();
   };
 
   return (

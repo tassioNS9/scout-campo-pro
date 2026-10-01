@@ -46,37 +46,46 @@ export async function createTime(formData: FormData) {
     .returning();
 
   // 3. Se enviou escudo, faz upload e atualiza o registro
-  if (escudo) {
-    const extensao = escudo.type.split("/")[1];
-    const path = `times/${time.id}/escudo.${extensao}`;
-    console.log("Path do escudo:", path);
+  try {
+    if (escudo) {
+      const extensao = escudo.type.split("/")[1];
+      const path = `times/${time.id}/escudo.${extensao}`;
 
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("escudos-times")
-      .upload(path, escudo, { upsert: true, contentType: escudo.type });
-    console.log("Resultado do upload do escudo:", { uploadError });
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("escudos-times")
+        .upload(path, escudo, { upsert: true, contentType: escudo.type });
 
-    if (uploadError) {
-      // time já foi criado, mas o escudo falhou — não desfaz o time,
-      // só avisa que o upload deu erro (usuário pode tentar de novo depois)
-      return {
-        sucesso: true,
-        timeId: time.id,
-        avisoEscudo:
-          "Time criado, mas houve falha ao enviar o escudo. Tente novamente na edição.",
-      };
+      if (uploadError) {
+        // time já foi criado, mas o escudo falhou — não desfaz o time,
+        // só avisa que o upload deu erro (usuário pode tentar de novo depois)
+        return {
+          sucesso: true,
+          timeId: time.id,
+          avisoEscudo:
+            "Time criado, mas houve falha ao enviar o escudo. Tente novamente na edição.",
+        };
+      }
+
+      const { data: publicUrlData } = supabaseAdmin.storage
+        .from("escudos-times")
+        .getPublicUrl(path);
+
+      await db
+        .update(timesTable)
+        .set({ escudoUrl: publicUrlData.publicUrl, escudoPath: path })
+        .where(eq(timesTable.id, time.id));
+
+      return { sucesso: true, timeId: time.id };
     }
-
-    const { data: publicUrlData } = supabaseAdmin.storage
-      .from("escudos-times")
-      .getPublicUrl(path);
-
-    await db
-      .update(timesTable)
-      .set({ escudoUrl: publicUrlData.publicUrl, escudoPath: path })
-      .where(eq(timesTable.id, time.id));
+  } catch (error) {
+    console.error("Erro ao finalizar criação do time:", error);
+    return {
+      sucesso: true,
+      timeId: time.id,
+      avisoEscudo: "Time criado, mas houve um problema ao salvar o escudo.",
+    };
+  } finally {
+    // 4. Revalida a rota de times para refletir a mudança
+    revalidatePath("/times");
   }
-
-  revalidatePath("/times");
-  return { sucesso: true, timeId: time.id };
 }
