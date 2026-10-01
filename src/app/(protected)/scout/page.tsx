@@ -321,7 +321,7 @@ function ScoutContent() {
     <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
       <main className="container mx-auto px-4 py-8">
         {/* Selection Row */}
-        <div className="mb-8 flex justify-between gap-2 px-2">
+        <div className="mb-8 flex flex-col gap-2 px-2">
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-300">
               Partida
@@ -337,7 +337,7 @@ function ScoutContent() {
               <SelectContent className="border-slate-700 bg-slate-800">
                 {partidas.map((p) => (
                   <SelectItem key={p.id} value={p.id.toString()}>
-                    {p.nomeTime} vs {p.nomeTimeAdversario} —{" "}
+                    {p.nomeTime.split(" ")[0]} vs {p.nomeTimeAdversario} —
                     {new Date(p.data).toLocaleDateString("pt-BR")}
                   </SelectItem>
                 ))}
